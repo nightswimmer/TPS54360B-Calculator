@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPS54360B Component Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --acc:#1a6ef7;--ok:#1d9e75;--warn:#ba7517;--err:#a32d2d;
+  --mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;
+  --bg:#ffffff;--bg2:#f5f4f0;--border:rgba(0,0,0,0.12);
+  --text:#1a1a18;--text2:#6b6a65;--text3:#999890;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--bg2:#242422;--border:rgba(255,255,255,0.12);
+  --text:#e8e6de;--text2:#9c9a92;--text3:#6b6965;
+}}
+body{font-family:sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px}
+.root{display:grid;grid-template-columns:304px 1fr;min-height:calc(100vh - 32px);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;max-width:1300px;margin:0 auto}
+.side{background:var(--bg2);padding:16px;border-right:0.5px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sh{font-family:var(--head);font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.2px;margin-bottom:2px}
+.ss{font-size:11px;color:var(--text2);margin-bottom:14px}
+.slbl{font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--text2);text-transform:uppercase;margin:12px 0 6px}
+.slbl:first-of-type{margin-top:0}
+.ig{margin-bottom:7px}
+.ir{display:flex;align-items:center;gap:6px}
+.il{font-size:11px;color:var(--text2);width:140px;flex-shrink:0;line-height:1.4}
+.inp{font-family:var(--mono);font-size:12px;background:var(--bg);border:0.5px solid var(--border);border-radius:6px;padding:5px 7px;color:var(--text);width:68px;text-align:right;transition:border-color .15s}
+.inp:focus{outline:none;border-color:var(--acc)}
+.un{font-size:11px;color:var(--text2);min-width:28px}
+.rr{display:flex;align-items:center;gap:5px;margin-top:3px}
+.rr input[type=range]{flex:1;accent-color:var(--acc)}
+.mn,.mx{font-size:10px;color:var(--text3)}
+.vm{font-size:10px;margin-top:2px;min-height:13px}
+.vm.ok{color:var(--ok)}.vm.err{color:var(--err)}.vm.warn{color:var(--warn)}
+.dv{height:0.5px;background:var(--border);margin:8px 0}
+.fixed-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.fixed-val{font-family:var(--mono);font-size:11px;color:var(--text);background:var(--bg);border:0.5px solid var(--border);border-radius:6px;padding:4px 7px;width:68px;text-align:right;opacity:.7}
+.fixed-note{font-size:10px;color:var(--text3);margin-bottom:5px;padding-left:2px}
+
+.main{background:var(--bg);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.stat{background:var(--bg2);border-radius:8px;padding:8px 10px;text-align:center}.stat.card{text-align:left;padding:10px 12px;border-radius:10px}
+.sv{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text)}
+.sl{font-size:10px;color:var(--text2);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+.gtitle{font-family:var(--head);font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border);padding-bottom:6px;margin-bottom:2px}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.g3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px 13px;transition:border-color .2s,background .2s;min-width:0;overflow:hidden}
+.card.full{grid-column:1/-1}
+.card.overridden{border-color:rgba(186,117,23,.45);background:rgba(186,117,23,.035)}
+.clbl{font-size:10px;color:var(--text2);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cbadge{font-size:9px;padding:2px 5px;border-radius:4px;font-weight:600}
+.ok-b{background:rgba(29,158,117,.13);color:var(--ok)}
+.warn-b{background:rgba(186,117,23,.13);color:var(--warn)}
+.ov-b{background:rgba(186,117,23,.2);color:var(--warn)}
+.cv{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--text);line-height:1.2}
+.cv.struck{color:var(--text3);text-decoration:line-through;font-size:13px;font-weight:400}
+.cstd{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:2px}
+.cstd.hi{color:var(--acc)}
+.cnote{font-size:11px;color:var(--text2);margin-top:4px;line-height:1.5}
+/* Override inline field — sits right of the value */
+.val-row{display:flex;align-items:flex-start;gap:8px;justify-content:space-between}
+.val-left{min-width:0;flex:1}
+.ov-inline{display:flex;align-items:center;gap:4px;padding:4px 6px;background:var(--bg);border:0.5px solid rgba(186,117,23,.4);border-radius:6px;flex-shrink:0}
+.ov-field{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--warn);background:transparent;border:none;outline:none;width:72px;text-align:right;padding:0}
+.ov-rst{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;padding:0 1px;line-height:1;transition:color .15s;flex-shrink:0}
+.ov-rst:hover{color:var(--warn)}
+/* active override value shown in amber */
+.ov-active{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--warn)}
+.binding{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
+.binding.skip{background:rgba(186,117,23,.15);color:var(--warn)}
+.binding.shift{background:rgba(26,110,247,.12);color:var(--acc)}
+.fblock{margin-top:8px;padding:7px 9px;background:var(--bg);border:0.5px solid var(--border);border-radius:6px}
+.fblock.hidden{display:none}
+.ftitle{font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.feq{font-family:var(--mono);font-size:10px;color:var(--text2);line-height:2;word-break:break-all}
+.feq .s{color:var(--acc);font-weight:500}.feq .v{color:var(--ok)}.feq .o{color:var(--text3)}.feq .w{color:var(--warn);font-weight:500}
+/* Changed value highlight */
+@keyframes flash-changed{
+  0%  {outline:2px solid var(--warn);outline-offset:0;background-color:rgba(186,117,23,.1)}
+  60% {outline:2px solid var(--warn);outline-offset:0;background-color:rgba(186,117,23,.1)}
+  100%{outline:2px solid transparent;outline-offset:0;background-color:transparent}
+}
+.card.changed{animation:flash-changed 2.5s ease-out forwards}
+.card.updated{border-left:2.5px solid var(--warn);border-color:var(--warn)}
+.ftog{font-size:13px;width:22px;height:22px;border-radius:4px;border:0.5px solid var(--border);background:var(--bg);color:var(--text3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s,border-color .15s;margin-left:auto;flex-shrink:0;line-height:1}
+.ftog:hover{background:var(--bg2);color:var(--text2)}
+.ftog.active{background:rgba(26,110,247,.08);color:var(--acc);border-color:rgba(26,110,247,.3)}
+/* Sidebar icon button row */
+.icon-btn-row{display:flex;gap:6px;margin-bottom:12px}
+.icon-btn{position:relative;width:34px;height:34px;border-radius:7px;border:0.5px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;transition:background .15s,color .15s,border-color .15s;flex-shrink:0}
+.icon-btn:hover{background:var(--bg2);color:var(--text)}
+.icon-btn.active{background:rgba(26,110,247,.08);color:var(--acc);border-color:rgba(26,110,247,.3)}
+.icon-btn.danger:hover{background:rgba(163,45,45,.08);color:var(--err);border-color:rgba(163,45,45,.3)}
+.icon-btn.success:hover{background:rgba(29,158,117,.08);color:var(--ok);border-color:rgba(29,158,117,.3)}
+/* Tooltip */
+.icon-btn .tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:10px;font-family:var(--font-sans,sans-serif);white-space:nowrap;padding:4px 8px;border-radius:5px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100}
+.icon-btn .tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--text)}
+.icon-btn:hover .tip{opacity:1}
+.empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.empty p{font-size:13px;line-height:1.7}
+@media(max-width:700px){.root{grid-template-columns:1fr}.side{border-right:none;border-bottom:0.5px solid var(--border)}.srow{grid-template-columns:repeat(2,1fr)}.g2,.g3{grid-template-columns:1fr}}
+
+/* ── Schematic view ─────────────────────────────────── */
+#schem-panel{
+  display:none;
+  grid-column:2;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  overflow:auto;
+  padding:16px;
+  box-sizing:border-box;
+  background:var(--bg);
+}
+#schem-panel.active{ display:flex; }
+#schem-wrap{
+  position:relative;
+  width:100%;
+  max-width:980px;
+  flex-shrink:0;
+}
+#schem-wrap svg{
+  border-radius:8px;
+  border:0.5px solid var(--border);
+  box-shadow:0 2px 12px rgba(0,0,0,.08);
+}
+.svl{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  pointer-events:none;
+  background:rgba(20,20,18,0.84);
+  border:0.5px solid rgba(255,255,255,0.13);
+  border-radius:5px;
+  padding:2px 5px 3px;
+  line-height:1.3;
+  white-space:nowrap;
+}
+@media(prefers-color-scheme:light){
+  .svl{
+    background:rgba(255,255,255,0.92);
+    border:0.5px solid rgba(0,0,0,0.18);
+    box-shadow:0 1px 4px rgba(0,0,0,.1);
+  }
+}
+.svl-ref{ display:block; font-size:7px;  font-weight:700; color:var(--acc); font-family:var(--head); letter-spacing:.04em; text-transform:uppercase; }
+.svl-val{ display:block; font-size:10px; font-weight:700; color:var(--text); font-family:var(--mono); }
+.svl-sub{ display:block; font-size:7.5px; color:var(--ok); font-family:var(--mono); }
+.svl.ov .svl-sub{ color:var(--warn); }
+#schem-tog.son{ background:rgba(26,110,247,.12); color:var(--acc); border-color:rgba(26,110,247,.4); }
+</style>
+</head>
+<body>
+<div class="root">
+<div class="side">
+  <div class="sh">TPS54360B</div>
+  <div class="ss">Component calculator &middot; SNVSB93</div>
+  <div class="icon-btn-row">
+    <button class="icon-btn" id="glob-tog" onclick="window.toggleAllFormulas()" title="">
+      <span>&#x2211;</span><span class="tip">Show / hide all formulas</span>
+    </button>
+    <button class="icon-btn danger" onclick="window.resetAll()" title="">
+      <span>&#x21BA;</span><span class="tip">Reset to defaults</span>
+    </button>
+    <button class="icon-btn success" onclick="window.saveToFile()" title="">
+      <span>&#x2913;</span><span class="tip">Save configuration to file</span>
+    </button>
+    <button class="icon-btn success" onclick="window.loadFromFile()" title="">
+      <span>&#x2912;</span><span class="tip">Load configuration from file</span>
+    </button>
+    <input type="file" id="load-file-input" accept=".json" style="display:none">
+    <button class="icon-btn" id="schem-tog" onclick="window.toggleSchematic()" title="">
+      <span>&#9638;</span><span class="tip">Schematic view</span>
+    </button>
+  </div>
+  <div class="slbl">Design parameters</div>
+  <div class="ig"><div class="ir"><span class="il">Input voltage Vin(max)</span><input class="inp" id="vin_max" type="number" value="60" min="4.5" max="60" step="0.5"><span class="un">V</span></div><div class="rr"><span class="mn">4.5</span><input type="range" id="vin_max-r" min="4.5" max="60" step="0.5" value="60"><span class="mx">60</span></div><div class="vm" id="vin_max-msg"></div></div>
+  <div class="ig"><div class="ir"><span class="il">Input voltage Vin(min)</span><input class="inp" id="vin_min" type="number" value="12" min="4.5" max="60" step="0.5"><span class="un">V</span></div><div class="rr"><span class="mn">4.5</span><input type="range" id="vin_min-r" min="4.5" max="60" step="0.5" value="12"><span class="mx">60</span></div><div class="vm" id="vin_min-msg"></div></div>
+  <div class="ig"><div class="ir"><span class="il">Output voltage Vout</span><input class="inp" id="vout" type="number" value="5" min="0.8" max="59" step="0.1"><span class="un">V</span></div><div class="rr"><span class="mn">0.8</span><input type="range" id="vout-r" min="0.8" max="30" step="0.1" value="5"><span class="mx">30</span></div><div class="vm" id="vout-msg"></div></div>
+  <div class="ig"><div class="ir"><span class="il">Output current Iout</span><input class="inp" id="iout" type="number" value="3.5" min="0.1" max="3.5" step="0.1"><span class="un">A</span></div><div class="rr"><span class="mn">0.1</span><input type="range" id="iout-r" min="0.1" max="3.5" step="0.1" value="3.5"><span class="mx">3.5</span></div><div class="vm" id="iout-msg"></div></div>
+  <div class="ig"><div class="ir"><span class="il">Switching freq fSW</span><input class="inp" id="fsw" type="number" value="600" min="100" max="2500" step="10"><span class="un">kHz</span></div><div class="rr"><span class="mn">100</span><input type="range" id="fsw-r" min="100" max="2500" step="10" value="600"><span class="mx">2500</span></div><div class="vm" id="fsw-msg"></div></div>
+  <div class="dv"></div>
+  <div class="slbl">Inductor &amp; diode</div>
+  <div class="ig"><div class="ir"><span class="il">Inductor DCR Rdc</span><input class="inp" id="rdc" type="number" value="25" min="1" max="500" step="1"><span class="un">m&#x3A9;</span></div><div class="rr"><span class="mn">1</span><input type="range" id="rdc-r" min="1" max="500" step="1" value="25"><span class="mx">500</span></div><div class="vm" id="rdc-msg"></div></div>
+  <div class="ig"><div class="ir"><span class="il">Diode fwd voltage Vd</span><input class="inp" id="vd" type="number" value="0.7" min="0.1" max="1.5" step="0.05"><span class="un">V</span></div><div class="rr"><span class="mn">0.1</span><input type="range" id="vd-r" min="0.1" max="1.5" step="0.05" value="0.7"><span class="mx">1.5</span></div></div>
+  <div class="ig"><div class="ir"><span class="il">Output cap ESR</span><input class="inp" id="resr" type="number" value="0.25" min="0.1" max="200" step="0.05"><span class="un">m&#x3A9;</span></div><div class="rr"><span class="mn">0.1</span><input type="range" id="resr-r" min="0.1" max="200" step="0.05" value="0.25"><span class="mx">200</span></div><div class="fixed-note" style="margin-top:2px">~2&ndash;5m&Omega; ceramic, ~50&ndash;200m&Omega; electrolytic</div></div>
+  <div class="dv"></div>
+  <div class="slbl">Short-circuit parameters</div>
+  <div class="ig"><div class="ir"><span class="il">Current limit ICL</span><input class="inp" id="icl" type="number" value="4.7" min="1" max="6" step="0.1"><span class="un">A</span></div><div class="rr"><span class="mn">1</span><input type="range" id="icl-r" min="1" max="6" step="0.1" value="4.7"><span class="mx">6</span></div><div class="fixed-note" style="margin-top:2px">Typ. 4.5A min peak, 5.5A switch limit</div></div>
+  <div class="ig"><div class="ir"><span class="il">SC output voltage Vout(SC)</span><input class="inp" id="vsc" type="number" value="0.1" min="0" max="2" step="0.05"><span class="un">V</span></div><div class="rr"><span class="mn">0</span><input type="range" id="vsc-r" min="0" max="2" step="0.05" value="0.1"><span class="mx">2</span></div><div class="fixed-note" style="margin-top:2px">Output voltage during short circuit</div></div>
+  <div class="dv"></div>
+  <div class="slbl">Fixed chip parameters</div>
+  <div class="fixed-row"><span class="il">Min on-time tON</span><span class="fixed-val">135 ns</span></div><div class="fixed-note">Typical value per datasheet</div>
+  <div class="fixed-row"><span class="il">Switch RDS(on)</span><span class="fixed-val">92 m&#x3A9;</span></div><div class="fixed-note">Integrated high-side MOSFET</div>
+  <div class="fixed-row"><span class="il">Foldback ratio fDIV</span><span class="fixed-val">8</span></div><div class="fixed-note">Maximum foldback divisor</div>
+  <div class="dv"></div>
+  <div class="slbl">Transient response spec</div>
+  <div class="ig"><div class="ir"><span class="il">Allowable &Delta;Vout</span><input class="inp" id="dvout_pct" type="number" value="4" min="0.1" max="20" step="0.1"><span class="un">%</span></div><div class="rr"><span class="mn">0.1</span><input type="range" id="dvout_pct-r" min="0.1" max="20" step="0.1" value="4"><span class="mx">20</span></div><div class="fixed-note" style="margin-top:2px">Max Vout deviation during load step (Eq. 32)</div></div>
+  <div class="ig"><div class="ir"><span class="il">Load step &Delta;Iout</span><input class="inp" id="diout_pct" type="number" value="75" min="1" max="100" step="1"><span class="un">%</span></div><div class="rr"><span class="mn">1</span><input type="range" id="diout_pct-r" min="1" max="100" step="1" value="75"><span class="mx">100</span></div><div class="fixed-note" style="margin-top:2px">Load current step as % of Iout (Eq. 32)</div></div>
+  <div class="dv"></div>
+  <div class="slbl">Ripple factor</div>
+  <div class="ig"><div class="ir"><span class="il">Kind</span><input class="inp" id="kind" type="number" value="0.3" min="0.1" max="0.5" step="0.05"><span class="un"></span></div><div class="rr"><span class="mn">0.1</span><input type="range" id="kind-r" min="0.1" max="0.5" step="0.05" value="0.3"><span class="mx">0.5</span></div></div>
+
+</div>
+
+<div class="empty" id="empty" style="grid-column:2;padding:60px 20px;text-align:center;color:var(--text2)"><p style="font-size:13px;line-height:1.7">Set your parameters on the left<br>and press <strong>Calculate components</strong></p></div>
+<div class="main" id="main" style="display:none"></div>
+<div id="schem-panel"><div id="schem-wrap"><!-- Created with Inkscape (http://www.inkscape.org/) --><svg style="background:#fff;display:block;width:100%;height:auto" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" width="297mm" height="210mm" viewBox="0 0 297 210" version="1.1" id="svg1"><style data-optimizer="1">
+  .Text {
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    font-stretch:normal;
+    line-height:1.25;
+    font-family:'Arial Rounded MT Bold';
+    font-variant-ligatures:normal;
+    font-variant-caps:normal;
+    font-variant-numeric:normal;
+    font-variant-east-asian:normal;
+    text-align:center;
+    letter-spacing:0px;
+    word-spacing:0px;
+    text-anchor:middle;
+    stroke-width:0.0001;
+    stroke-dasharray:none;
+    fill:#000000;
+    fill-opacity:1;
+    stroke:none;
+  }
+  .opt-01 {
+    stroke-width:0.01;
+  }
+  .opt-08 {
+    stroke:#000000;
+    stroke-dasharray:none;
+    stroke-linecap:butt;
+    stroke-linejoin:miter;
+    stroke-opacity:1;
+    stroke-width:0.6;
+  }
+</style>
+  
+  <defs id="defs1">
+    
+  </defs>
+  <g id="layer1">
+    <path d="m 248.7083,150.9914 v -12.6143" id="path2" class="opt-08" style="fill:none"/>
+    <rect style="fill:none;stroke:#000000;stroke-width:0.6;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke" id="rect3" width="63.5" height="95.25" x="95.25" y="55.5625" ry="0"/>
+    <path d="m 171.9792,66.1458 -13.2292,0" id="path71" class="opt-08" style="fill:none"/>
+    <g id="g84" transform="matrix(2.3838036,0,0,2.3838036,-11.279548,-72.912792)" style="stroke-width:0.0001;font-size:1.895px" class="Text">
+      <text xml:space="preserve" x="78.0521" y="61.3833" id="text71"><tspan id="tspan71" class="Text" x="78.0521" y="61.3833" style="font-size:1.895px">C4</tspan></text>
+    </g>
+    <g id="g98" transform="matrix(2.3838036,0,0,2.3838036,11.877528,-60.533154)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.831px;line-height:1.25;font-family:'Arial Rounded MT Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;stroke-width:0.01;stroke-dasharray:none;stroke:none;fill:#000000;fill-opacity:1" x="24.1328" y="79.9936" id="text71-8" transform="scale(0.96620636,1.0349756)"><tspan id="tspan71-8" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.831px;font-family:'Arial Rounded MT Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.01;stroke-dasharray:none;stroke:none;fill:#000000;fill-opacity:1" x="24.1328" y="79.9936">C5</tspan></text>
+    </g>
+    <g id="g98-7" transform="matrix(2.3838036,0,0,2.3838036,-10.589405,-68.609481)" style="stroke-width:0.01;fill:#2093f1;fill-opacity:1;font-size:1.895px" class="Text">
+      <g id="g99" style="stroke-width:0.01;stroke-dasharray:none;stroke:none;fill:#2093f1;fill-opacity:1">
+        <text xml:space="preserve" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.831px;line-height:1.25;font-family:'Arial Rounded MT Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;stroke-width:0.01;stroke-dasharray:none;stroke:none;fill:#2093f1;fill-opacity:1" x="24.1328" y="79.9936" id="text71-8-8" transform="scale(0.96620636,1.0349756)"><tspan id="tspan71-8-3" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.831px;font-family:'Arial Rounded MT Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.01;stroke-dasharray:none;stroke:none;fill:#2093f1;fill-opacity:1" x="24.1328" y="79.9936">C8</tspan></text>
+      </g>
+    </g>
+    <text xml:space="preserve" x="101.7382" y="70.4084" id="text71-9-7" class="Text" style="font-size:4.5173px"><tspan id="tspan71-6-7" x="101.7382" y="70.4084" class="Text" style="font-size:4.5173px">VIN</tspan></text>
+    <text xml:space="preserve" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.895px;line-height:1.25;font-family:&quot;Arial Rounded MT Bold&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;stroke-width:0" x="127.4777" y="53.2301" id="text71-9-7-6" class="Text"><tspan id="tspan71-6-7-5" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.5173px;font-family:'Arial Rounded MT Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0;stroke-dasharray:none;stroke:none;fill:#000000;fill-opacity:1" x="127.4777" y="53.2301">TPS54360B</tspan></text>
+    <text xml:space="preserve" x="105.8132" y="98.1897" id="text71-9-3" class="Text" style="font-size:4.5173px"><tspan id="tspan71-6-3" x="105.8132" y="98.1897" class="Text" style="font-size:4.5173px">RT/CLK</tspan></text>
+    <text xml:space="preserve" x="104.5195" y="108.773" id="text71-9-9" class="Text" style="font-size:4.5173px"><tspan id="tspan71-6-9" x="104.5195" y="108.773" class="Text" style="font-size:4.5173px">COMP</tspan></text>
+    <text xml:space="preserve" x="267.461" y="83.2886" id="text71-7" class="Text" style="font-size:4.5173px"><tspan x="267.461" y="83.2886" id="tspan84" class="Text" style="font-size:4.5173px">Vout</tspan></text>
+    <text xml:space="preserve" x="35.1159" y="67.4136" id="text71-7-5" class="Text" style="font-size:4.5173px"><tspan x="35.1159" y="67.4136" id="tspan84-7" class="Text" style="font-size:4.5173px">Vin</tspan></text>
+    <text xml:space="preserve" x="149.6117" y="67.7626" id="text71-7-2" class="Text" style="font-size:4.5173px"><tspan x="149.6117" y="67.7626" id="tspan84-9" class="Text" style="font-size:4.5173px">BOOT</tspan></text>
+    <text xml:space="preserve" x="152.5607" y="86.2834" id="text71-7-3" class="Text" style="font-size:4.5173px"><tspan x="152.5607" y="86.2834" id="tspan84-5" class="Text" style="font-size:4.5173px">SW</tspan></text>
+    <text xml:space="preserve" x="153.3294" y="124.6205" id="text71-7-8" class="Text" style="font-size:4.5173px"><tspan x="153.3294" y="124.6205" id="tspan84-4" class="Text" style="font-size:4.5173px">FB</tspan></text>
+    <text xml:space="preserve" x="151.1502" y="137.8772" id="text71-7-7" class="Text" style="font-size:4.5173px"><tspan x="151.1502" y="137.8772" id="tspan84-6" class="Text" style="font-size:4.5173px">GND</tspan></text>
+    <g id="g76" transform="matrix(2.3838036,0,0,2.3838036,-27.430407,-82.695942)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" x="102.6583" y="75.6708" id="text71-4" class="Text" style="font-size:1.895px"><tspan id="tspan71-4" x="102.6583" y="75.6708" class="Text" style="font-size:1.895px">C6</tspan></text>
+    </g>
+    <g id="g83" transform="matrix(2.3838036,0,0,2.3838036,-10.235203,-74.652404)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" x="90.9512" y="68.7685" id="text71-6" class="Text" style="font-size:1.895px"><tspan id="tspan71-5" x="90.9512" y="68.7685" class="Text" style="font-size:1.895px">L1</tspan></text>
+    </g>
+    <g id="g75" transform="matrix(2.3838036,0,0,2.3838036,-7.0751808,-73.539798)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" x="81.7562" y="78.5812" id="text71-6-2" class="Text" style="font-size:1.895px"><tspan id="tspan71-5-8" x="81.7562" y="78.5812" class="Text" style="font-size:1.895px">D1</tspan></text>
+    </g>
+    <g id="g74" transform="matrix(2.3838036,0,0,2.3838036,21.787337,-62.355621)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" x="92.9087" y="83.2128" id="text71-6-2-0" class="Text" style="font-size:1.895px"><tspan id="tspan71-5-8-2" x="92.9087" y="83.2128" class="Text" style="font-size:1.895px">R6</tspan></text>
+    </g>
+    <g id="g73" transform="matrix(2.3838036,0,0,2.3838036,21.887012,-70.737213)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" x="92.8688" y="74.4046" id="text71-6-2-0-9" class="Text" style="font-size:1.895px"><tspan id="tspan71-5-8-2-0" x="92.8688" y="74.4046" class="Text" style="font-size:1.895px">R5</tspan></text>
+    </g>
+    <g id="g73-1" transform="matrix(2.3838036,0,0,2.3838036,-191.06949,-63.321163)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" x="92.8688" y="74.4046" id="text71-6-2-0-9-2" class="Text" style="font-size:1.895px"><tspan id="tspan71-5-8-2-0-6" x="92.8688" y="74.4046" class="Text" style="font-size:1.895px">R3</tspan></text>
+    </g>
+    <g id="g73-3" transform="matrix(2.3838036,0,0,2.3838036,-152.82843,-57.980838)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" x="92.8688" y="74.4046" id="text71-6-2-0-9-1" class="Text" style="font-size:1.895px"><tspan id="tspan71-5-8-2-0-2" x="92.8688" y="74.4046" class="Text" style="font-size:1.895px">R4</tspan></text>
+    </g>
+    <path d="m 177.5354,66.1458 h 14.2875 v 18.5208 l 10.5479,-0.0354" id="path72" class="opt-08" style="fill:none"/>
+    <path d="m 191.8229,84.6667 -33.0729,0" id="path73" class="opt-08" style="fill:none"/>
+    <path d="m 210.3438,84.6667 h 13.7583 l 0,8.7312" id="path76" class="opt-08" style="fill:none"/>
+    <path d="m 190.2354,107.1563 33.8667,0 v -9.3648" id="path77" class="opt-08" style="fill:none"/>
+    <path d="m 184.9437,107.1562 -12.9646,0 V 84.6667" id="path78" class="opt-08" style="fill:none"/>
+    <path d="m 224.1021,84.6667 h 48.565" id="path79" class="opt-08" style="fill:none"/>
+    <path d="m 248.7083,109.0083 0,21.4443" id="path80" class="opt-08" style="fill:none"/>
+    <path d="M 248.7083,101.0653 V 84.6667" id="path81" class="opt-08" style="fill:none"/>
+    <path d="m 224.1021,112.2019 v -5.0457" id="path82" class="opt-08" style="fill:none"/>
+    <path d="m 158.75,123.0313 89.9583,0" id="path83" class="opt-08" style="fill:none"/>
+    <path d="m 158.75,136.2604 h 13.2292 l 0,17.1979" id="path86" class="opt-08" style="fill:none"/>
+    <circle id="path96" cx="171.9792" cy="84.6667" r="0.6307" class="opt-08" style="fill:#000000;fill-opacity:1;paint-order:markers fill stroke"/>
+    <circle id="path96-4" cx="191.8229" cy="84.6667" r="0.6307" class="opt-08" style="fill:#000000;fill-opacity:1;paint-order:markers fill stroke"/>
+    <circle id="path96-01" cx="224.1021" cy="107.1563" r="0.6307" class="opt-08" style="fill:#000000;fill-opacity:1;paint-order:markers fill stroke"/>
+    <circle id="path96-0" cx="224.1021" cy="84.6667" r="0.6307" class="opt-08" style="fill:#000000;fill-opacity:1;paint-order:markers fill stroke"/>
+    <g id="g76-4" transform="matrix(2.3838036,0,0,2.3838036,-190.35475,-99.574123)" class="Text opt-01" style="font-size:1.895px">
+      <text xml:space="preserve" x="102.7918" y="75.6477" id="text71-4-2" class="Text" style="font-size:1.895px"><tspan id="tspan71-4-0" x="102.7918" y="75.6477" class="Text" style="font-size:1.895px">C1</tspan></text>
+    </g>
+    <path d="m 31.75,68.7917 29.1042,0 0,7.5686" id="path76-0" class="opt-08" style="fill:none"/>
+    <circle id="path96-01-1" cx="74.0833" cy="107.1563" r="0.6307" class="opt-08" style="fill:#000000;fill-opacity:1;paint-order:markers fill stroke"/>
+    <circle id="path96-0-4" cx="60.8542" cy="68.7917" r="0.6307" class="opt-08" style="fill:#000000;fill-opacity:1;paint-order:markers fill stroke"/>
+    <circle id="path96-7" cx="248.7083" cy="84.6667" r="0.6307" class="opt-08" style="fill:#000000;fill-opacity:1;paint-order:markers fill stroke"/>
+    <circle id="path96-72" cx="248.7083" cy="123.0313" r="0.6307" class="opt-08" style="fill:#000000;fill-opacity:1;paint-order:markers fill stroke"/>
+    <path d="m 60.8542,68.7917 34.3958,0" id="path97" class="opt-08" style="fill:none"/>
+    <path d="M 60.8542,85.7008 V 81.9165" id="path98" class="opt-08" style="fill:none"/>
+    <path d="m 95.25,96.5729 -59.5313,0 v 11.9062" id="path99" class="opt-08" style="fill:none"/>
+    <path d="m 35.7188,116.4167 0,37.0417" id="path100" class="opt-08" style="fill:none"/>
+    <path d="m 59.5313,153.7229 0,-6.8792 h 14.5521 v -8.9958" id="path101" class="opt-08" style="fill:none"/>
+    <path d="M 74.0833,132.4305 V 121.7083" id="path102" class="opt-08" style="fill:none"/>
+    <path d="m 74.0833,113.7708 0,-6.6146" id="path102-1" class="opt-08" style="fill:none"/>
+    <path d="m 51.5938,129.9104 v 16.9333 h 7.9375" id="path104" class="opt-08" style="fill:none"/>
+    <path d="M 95.25,107.1563 H 51.5938 l 0,17.1979" id="path113" class="opt-08" style="fill:none"/>
+    <path d="m 74.0833,121.7438 v -1.5875 l -1.3229,-0.5292 2.6458,-0.7937 -2.6458,-0.7937 2.6458,-0.7937 -2.6458,-0.7937 2.6458,-0.7937 -1.3229,-0.5292 v -1.3229" id="path1" class="opt-08" style="fill:none"/>
+    <path d="m 35.7188,116.4167 v -1.5875 l -1.3229,-0.5292 2.6458,-0.7937 -2.6458,-0.7937 2.6458,-0.7937 -2.6458,-0.7937 2.6458,-0.7937 -1.3229,-0.5292 v -1.3229" id="path1-2" class="opt-08" style="fill:none"/>
+    <path d="m 248.7083,109.0083 v -1.5875 l -1.3229,-0.5292 2.6458,-0.7937 -2.6458,-0.7937 2.6458,-0.7937 -2.6458,-0.7937 2.6458,-0.7937 -1.3229,-0.5292 v -1.3229" id="path1-7" class="opt-08" style="fill:none"/>
+    <path d="m 248.7083,138.3771 v -1.5875 l -1.3229,-0.5292 2.6458,-0.7937 -2.6458,-0.7937 2.6458,-0.7937 -2.6458,-0.7937 2.6458,-0.7937 -1.3229,-0.5292 v -1.3229" id="path1-27" class="opt-08" style="fill:none"/>
+    <g id="g5" transform="translate(-23.151042,39.422915)">
+      <path d="M 82.6823,116.4167 V 114.3" id="path102-1-1" class="opt-08" style="fill:none"/>
+      <path d="m 79.375,116.4167 h 6.6146" id="path3" class="opt-08" style="fill:none"/>
+      <path d="m 80.6979,117.7396 h 3.9688" id="path4" class="opt-08" style="fill:none"/>
+      <path d="m 82.0208,119.0625 h 1.3229" id="path5" class="opt-08" style="fill:none"/>
+    </g>
+    <g id="g5-1" transform="translate(-15.213541,39.422915)">
+      <g id="g6-6-6" transform="translate(-15.875,-29.633342)">
+        <path d="m 82.6823,116.6813 v -2.1167" id="path102-1-1-1-5-0" class="opt-08" style="fill:none"/>
+        <path d="m 82.6823,120.1208 v -2.1167" id="path102-1-1-1-6-0-1" class="opt-08" style="fill:none"/>
+        <path d="m 80.0719,116.6813 h 5.2563" id="path3-3-9-6" class="opt-08" style="fill:none"/>
+        <path d="m 80.0719,118.0042 h 5.2563" id="path3-3-6-0-5" class="opt-08" style="fill:none"/>
+      </g>
+    </g>
+    <g id="g5-1-4" transform="translate(-5.953099,-8.571006)">
+      <g id="g6-6-6-6" transform="translate(-15.875,-29.633342)">
+        <path d="m 82.6823,116.6813 v -2.1167" id="path102-1-1-1-5-0-0" class="opt-08" style="fill:none"/>
+        <path d="m 82.6823,120.1208 v -2.1167" id="path102-1-1-1-6-0-1-7" class="opt-08" style="fill:none"/>
+        <path d="m 80.0719,116.6813 h 5.2563" id="path3-3-9-6-1" class="opt-08" style="fill:none"/>
+        <path d="m 80.0719,118.0042 h 5.2563" id="path3-3-6-0-5-7" class="opt-08" style="fill:none"/>
+      </g>
+    </g>
+    <g id="g5-1-4-0" transform="rotate(-90,110.00052,22.9526)">
+      <g id="g6-6-6-6-3" transform="translate(-15.875,-29.633342)">
+        <path d="m 82.6823,116.6813 v -2.1167" id="path102-1-1-1-5-0-0-8" class="opt-08" style="fill:none"/>
+        <path d="m 82.6823,120.1208 v -2.1167" id="path102-1-1-1-6-0-1-7-0" class="opt-08" style="fill:none"/>
+        <path d="m 80.0719,116.6813 h 5.2563" id="path3-3-9-6-1-1" class="opt-08" style="fill:none"/>
+        <path d="m 80.0719,118.0042 h 5.2563" id="path3-3-6-0-5-7-2" class="opt-08" style="fill:none"/>
+      </g>
+    </g>
+    <g id="g5-1-4-0-7" transform="rotate(180,145.45469,91.890522)">
+      <g id="g6-6-6-6-3-8" transform="translate(-15.875,-29.633342)">
+        <path d="m 82.6823,116.6813 v -2.1167" id="path102-1-1-1-5-0-0-8-3" class="opt-08" style="fill:none"/>
+        <path d="m 82.6823,120.1208 v -2.1167" id="path102-1-1-1-6-0-1-7-0-5" class="opt-08" style="fill:none"/>
+        <path d="m 80.0719,116.6813 h 5.2563" id="path3-3-9-6-1-1-1" class="opt-08" style="fill:none"/>
+        <path d="m 80.0719,118.0042 h 5.2563" id="path3-3-6-0-5-7-2-2" class="opt-08" style="fill:none"/>
+      </g>
+    </g>
+    <g id="g5-4" transform="translate(-46.963543,39.158329)">
+      <path d="M 82.6823,116.4167 V 114.3" id="path102-1-1-6" class="opt-08" style="fill:none"/>
+      <path d="m 79.375,116.4167 h 6.6146" id="path3-0" class="opt-08" style="fill:none"/>
+      <path d="m 80.6979,117.7396 h 3.9688" id="path4-6" class="opt-08" style="fill:none"/>
+      <path d="m 82.0208,119.0625 h 1.3229" id="path5-6" class="opt-08" style="fill:none"/>
+    </g>
+    <g id="g5-6" transform="translate(89.296878,39.158329)">
+      <path d="M 82.6823,116.4167 V 114.3" id="path102-1-1-3" class="opt-08" style="fill:none"/>
+      <path d="m 79.375,116.4167 h 6.6146" id="path3-7" class="opt-08" style="fill:none"/>
+      <path d="m 80.6979,117.7396 h 3.9688" id="path4-8" class="opt-08" style="fill:none"/>
+      <path d="m 82.0208,119.0625 h 1.3229" id="path5-8" class="opt-08" style="fill:none"/>
+    </g>
+    <g id="g5-5" transform="translate(166.02605,36.69138)">
+      <path d="M 82.6823,116.4167 V 114.3" id="path102-1-1-9" class="opt-08" style="fill:none"/>
+      <path d="m 79.375,116.4167 h 6.6146" id="path3-8" class="opt-08" style="fill:none"/>
+      <path d="m 80.6979,117.7396 h 3.9688" id="path4-4" class="opt-08" style="fill:none"/>
+      <path d="m 82.0208,119.0625 h 1.3229" id="path5-0" class="opt-08" style="fill:none"/>
+    </g>
+    <g id="g5-15" transform="translate(141.4198,-2.11667)">
+      <path d="M 82.6823,116.4167 V 114.3" id="path102-1-1-4" class="opt-08" style="fill:none"/>
+      <path d="m 79.375,116.4167 h 6.6146" id="path3-2" class="opt-08" style="fill:none"/>
+      <path d="m 80.6979,117.7396 h 3.9688" id="path4-0" class="opt-08" style="fill:none"/>
+      <path d="m 82.0208,119.0625 h 1.3229" id="path5-9" class="opt-08" style="fill:none"/>
+    </g>
+    <g id="g6-6" transform="translate(-8.598957,17.8659)">
+      <path d="m 82.6823,116.6813 v -2.1167" id="path102-1-1-1-5" class="opt-08" style="fill:none"/>
+      <path d="m 82.6823,120.1208 v -2.1167" id="path102-1-1-1-6-0" class="opt-08" style="fill:none"/>
+      <path d="m 80.0719,116.6813 h 5.2563" id="path3-3-9" class="opt-08" style="fill:none"/>
+      <path d="m 80.0719,118.0042 h 5.2563" id="path3-3-6-0" class="opt-08" style="fill:none"/>
+    </g>
+    <g id="g5-3" transform="translate(-21.8281,-28.599243)">
+      <path d="M 82.6823,116.4167 V 114.3" id="path102-1-1-5" class="opt-08" style="fill:none"/>
+      <path d="m 79.375,116.4167 h 6.6146" id="path3-9" class="opt-08" style="fill:none"/>
+      <path d="m 80.6979,117.7396 h 3.9688" id="path4-9" class="opt-08" style="fill:none"/>
+      <path d="m 82.0208,119.0625 h 1.3229" id="path5-81" class="opt-08" style="fill:none"/>
+    </g>
+    <path d="m 202.3708,84.6312 h 1.3229 c 0,-2.6458 1.3229,-2.6458 1.3229,0 0,-2.6458 1.3229,-2.6458 1.3229,0 0,-2.6458 1.3229,-2.6458 1.3229,0 0,-2.6458 1.3229,-2.6458 1.3229,0 h 1.3229" id="path6" class="opt-08" style="fill:none"/>
+    <g id="g10">
+      <path d="m 190.2354,107.1562 h -1.3229" id="path7" class="opt-08" style="fill:none"/>
+      <path d="m 186.2667,107.1562 h -1.3229" id="path7-8" class="opt-08" style="fill:none"/>
+      <path style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.265;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1" d="m 188.9125,105.3042 -2.6458,1.8521 2.6458,1.8521 z" id="path9"/>
+      <path style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1" d="m 186.7958,105.3042 h -0.5292 v 3.9688 h -0.5292" id="path10"/>
+    </g>
+  </g>
+</svg></div></div>
+
+</div>
+
+<script>
+(function(){
+/* ── Standard value tables ── */
+var E96=[1.0,1.02,1.05,1.07,1.1,1.13,1.15,1.18,1.2,1.21,1.24,1.27,1.3,1.33,1.37,1.4,1.43,1.47,1.5,1.54,1.58,1.6,1.62,1.65,1.69,1.74,1.78,1.8,1.82,1.87,1.91,1.96,2.0,2.05,2.1,2.15,2.2,2.21,2.26,2.32,2.37,2.4,2.43,2.49,2.55,2.61,2.67,2.7,2.74,2.8,2.87,2.94,3.0,3.01,3.09,3.16,3.24,3.3,3.32,3.4,3.48,3.57,3.6,3.65,3.74,3.83,3.9,3.92,4.02,4.12,4.22,4.3,4.32,4.42,4.53,4.64,4.7,4.75,4.87,4.99,5.1,5.11,5.23,5.36,5.49,5.6,5.62,5.76,5.9,6.04,6.19,6.2,6.34,6.49,6.65,6.8,6.81,6.98,7.15,7.32,7.5,7.68,7.87,8.06,8.2,8.25,8.45,8.66,8.87,9.09,9.1,9.31,9.53,9.76];
+var CAP_UF=[0.001,0.0011,0.0012,0.0013,0.0015,0.0016,0.0018,0.002,0.0022,0.0024,0.0027,0.003,0.0033,0.0036,0.0039,0.0043,0.0047,0.0051,0.0056,0.0062,0.0068,0.0075,0.0082,0.0091,0.01,0.011,0.012,0.013,0.015,0.016,0.018,0.02,0.022,0.024,0.027,0.03,0.033,0.036,0.039,0.043,0.047,0.051,0.056,0.062,0.068,0.075,0.082,0.091,0.1,0.11,0.12,0.13,0.15,0.16,0.18,0.2,0.22,0.24,0.27,0.3,0.33,0.36,0.39,0.43,0.47,0.51,0.56,0.62,0.68,0.75,0.82,0.91,1,1.1,1.2,1.3,1.5,1.6,1.8,2,2.2,2.4,2.7,3,3.3,3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1,10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91,100,110,120,130,150,160,180,200,220,240,270,300,330,360,390,430,470];
+var IND_UH=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2,10,12,15,18,22,27,33,39,47,56,68,82,100,150,220,330,470];
+var CAP_PF=[10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91,100,110,120,130,150,160,180,200,220,240,270,300,330,360,390,430,470,510,560,620,680,750,820,910,1000,1100,1200,1300,1500,1600,1800,2000,2200,2400,2700,3000,3300,3600,3900,4300,4700,5100,5600,6200,6800,7500,8200,9100,10000,11000,12000,13000,15000,16000,18000,20000,22000,24000,27000,30000,33000,36000,39000,43000,47000];
+function nearE24(v){var b=E96[0],bd=1e18,c;for(var d=-3;d<=6;d++)for(var i=0;i<E96.length;i++){c=E96[i]*Math.pow(10,d);if(Math.abs(c-v)<bd){bd=Math.abs(c-v);b=c;}}return b;}
+function nearCap(v){for(var i=0;i<CAP_UF.length;i++)if(CAP_UF[i]>=v)return CAP_UF[i];return CAP_UF[CAP_UF.length-1];}
+function nearL(v){for(var i=0;i<IND_UH.length;i++)if(IND_UH[i]>=v)return IND_UH[i];return IND_UH[IND_UH.length-1];}
+function nearPF(v){for(var i=0;i<CAP_PF.length;i++)if(CAP_PF[i]>=v)return CAP_PF[i];return CAP_PF[CAP_PF.length-1];}
+
+/* ── Formatters (HTML entity and raw text variants) ── */
+function fRH(v){if(v>=1e6)return (v/1e6).toPrecision(3)+'M&Omega;';if(v>=1e3)return (v/1e3).toPrecision(3)+'k&Omega;';if(v>=1)return v.toPrecision(3)+'&Omega;';return (v*1e3).toPrecision(3)+'m&Omega;';}
+function fRT(v){if(v>=1e6)return (v/1e6).toPrecision(3)+'MΩ';if(v>=1e3)return (v/1e3).toPrecision(3)+'kΩ';if(v>=1)return v.toPrecision(3)+'Ω';return (v*1e3).toPrecision(3)+'mΩ';}
+function fLH(v){if(v>=1000)return (v/1000).toPrecision(3)+'mH';if(v>=1)return v.toPrecision(3)+'&micro;H';return (v*1000).toPrecision(3)+'nH';}
+function fLT(v){if(v>=1000)return (v/1000).toPrecision(3)+'mH';if(v>=1)return v.toPrecision(3)+'µH';return (v*1000).toPrecision(3)+'nH';}
+function fCH(v){if(v>=1000)return (v/1000).toPrecision(3)+'mF';if(v>=1)return v.toPrecision(3)+'&micro;F';if(v>=0.001)return (v*1000).toPrecision(3)+'nF';return (v*1e6).toPrecision(3)+'pF';}
+function fCT(v){if(v>=1000)return (v/1000).toPrecision(3)+'mF';if(v>=1)return v.toPrecision(3)+'µF';if(v>=0.001)return (v*1000).toPrecision(3)+'nF';return (v*1e6).toPrecision(3)+'pF';}
+function fPT(v){return v>=1000?(v/1000).toFixed(1)+'nF':v.toFixed(0)+'pF';}   /* pF → display */
+function fPH(v){return v>=1000?(v/1000).toFixed(1)+'nF':v.toFixed(0)+'pF';}
+function p3(v){return parseFloat(v.toPrecision(3));}
+
+/* ── Input pair linking ── */
+function linkPair(nid,rid){
+  var n=document.getElementById(nid),r=document.getElementById(rid);
+  if(!n||!r)return;
+  n.addEventListener('input',function(){r.value=n.value;validate();});
+  r.addEventListener('input',function(){n.value=r.value;validate();});
+}
+['vin_max','vin_min','vout','iout','fsw','rdc','vd','resr','icl','vsc','dvout_pct','diout_pct','kind'].forEach(function(id){linkPair(id,id+'-r');});
+
+function setMsg(id,t,c){var e=document.getElementById(id);if(e){e.textContent=t;e.className='vm '+(c||'');}}
+function validate(){
+  var vin_max=parseFloat(document.getElementById('vin_max').value);
+  var vin_min=parseFloat(document.getElementById('vin_min').value);
+  var vout=parseFloat(document.getElementById('vout').value);
+  var iout=parseFloat(document.getElementById('iout').value);
+  var fsw=parseFloat(document.getElementById('fsw').value);
+  var rdc=parseFloat(document.getElementById('rdc').value);
+  var ok=true;
+  if(isNaN(vin_max)||vin_max<4.5||vin_max>60){setMsg('vin_max-msg','Must be 4.5\u201360V','err');ok=false;}
+  else if(vin_max<8)setMsg('vin_max-msg','Recommended \u2265 8V','warn');
+  else setMsg('vin_max-msg','');
+  if(isNaN(vin_min)||vin_min<4.5||vin_min>60){setMsg('vin_min-msg','Must be 4.5\u201360V','err');ok=false;}
+  else if(!isNaN(vin_max)&&vin_min>vin_max){setMsg('vin_min-msg','Must be \u2264 Vin(max)','err');ok=false;}
+  else setMsg('vin_min-msg','');
+  if(isNaN(vout)||vout<0.8){setMsg('vout-msg','Min 0.8V (VREF)','err');ok=false;}
+  else if(!isNaN(vin_min)&&vout>=vin_min){setMsg('vout-msg','Must be less than Vin(min)','err');ok=false;}
+  else setMsg('vout-msg','');
+  if(isNaN(iout)||iout<0.1||iout>3.5){setMsg('iout-msg','Max 3.5A continuous','err');ok=false;}
+  else setMsg('iout-msg','');
+  if(isNaN(fsw)||fsw<100||fsw>2500){setMsg('fsw-msg','Range: 100\u20132500kHz','err');ok=false;}
+  else setMsg('fsw-msg','');
+  if(isNaN(rdc)||rdc<1){setMsg('rdc-msg','Enter DCR in m\u03A9','err');ok=false;}
+  else setMsg('rdc-msg','');
+  return ok;
+}
+
+/* ── Formula block ── */
+function fb(eq,sym,sub,res){
+  return '<div class="fblock"><div class="ftitle">Formula &middot; Eq. '+eq+'</div>'
+    +'<div class="feq"><span class="s">'+sym+'</span></div>'
+    +'<div class="feq"><span class="o">= </span>'+sub+'</div>'
+    +'<div class="feq"><span class="o">= </span><span class="v">'+res+'</span></div></div>';
+}
+
+/* ── Override state ── */
+var OV = {};   /* { L_uH, C_out_uF, R4_ohm, C5_pF, C8_pF } */
+
+/* ── Parse user text → SI value ──
+   Unit handling: µH/uH/mH, µF/uF/nF/pF, kΩ/Ω/mΩ, bare numbers kept as-is */
+function parseVal(raw, defaultUnit) {
+  if(raw===''||raw==null) return NaN;
+  raw = raw.trim().replace(/[µ]/g,'u').replace(/[Ωω]/gi,'');
+  var m = raw.match(/^([0-9.eE+\-]+)\s*([a-zA-Z]*)/);
+  if(!m) return NaN;
+  var n=parseFloat(m[1]), u=(m[2]||'').toLowerCase();
+  if(isNaN(n)) return NaN;
+  if(defaultUnit==='uH'){
+    if(u==='mh') return n*1000;
+    if(u==='nh') return n/1000;
+    return n;
+  }
+  if(defaultUnit==='uF'){
+    if(u==='mf') return n*1000;
+    if(u==='nf'||u==='n') return n/1000;
+    if(u==='pf'||u==='p') return n/1e6;
+    return n;
+  }
+  if(defaultUnit==='pF'){
+    if(u==='uf'||u==='u') return n*1e6;
+    if(u==='nf'||u==='n') return n*1000;
+    return n;
+  }
+  if(defaultUnit==='Ohm'){
+    if(u==='m') return n/1000;
+    if(u==='k') return n*1000;
+    if(u==='meg') return n*1e6;
+    return n;
+  }
+  return n;
+}
+
+/* ── Pure calculation ── takes inputs + override object, returns full result set ── */
+function calc(inp, ov) {
+  var vin_max=inp.vin_max, vin_min=inp.vin_min, vout=inp.vout, iout=inp.iout, fsw_k=inp.fsw_k, kind=inp.kind;
+  var Rdc=inp.Rdc, Vd=inp.Vd, ICL=inp.ICL, Vsc=inp.Vsc;
+  var dvout_pct=inp.dvout_pct, diout_pct=inp.diout_pct;
+  var fsw=fsw_k*1e3;
+  var tON=135e-9, Rds=0.092, fDIV=8, VREF=0.8, gmPS=12, gmEA=350e-6;
+  var Resr=inp.Resr;
+  var r={vin_max:vin_max,vin_min:vin_min,vout:vout,iout:iout,fsw_k:fsw_k,fsw:fsw,kind:kind,
+         Rdc:Rdc,Vd:Vd,ICL:ICL,Vsc:Vsc,tON:tON,Rds:Rds,fDIV:fDIV,
+         VREF:VREF,gmPS:gmPS,gmEA:gmEA,Resr:Resr,
+         dvout_pct:dvout_pct,diout_pct:diout_pct};
+
+  /* RT (Eq 8) */
+  r.RT_calc=101756/Math.pow(fsw_k,1.008); r.RT_std=nearE24(r.RT_calc*1e3);
+
+  /* Duty cycle */
+  r.D=vout/vin_max;
+
+  /* Max fSW (Eq 9 & 10) — use vin_max (worst case) */
+  r.num_skip=iout*Rdc+vout+Vd; r.den_skip=vin_max-iout*Rds+Vd;
+  r.fsw_skip=(1/tON)*(r.num_skip/r.den_skip)/1e3;
+  r.num_shift=ICL*Rdc+Vsc+Vd; r.den_shift=vin_max-ICL*Rds+Vd;
+  r.fsw_shift=(fDIV/tON)*(r.num_shift/r.den_shift)/1e3;
+  r.fsw_max=Math.min(r.fsw_skip,r.fsw_shift);
+  r.fsw_bind=r.fsw_skip<r.fsw_shift?'skip':'shift';
+  r.fsw_ok=fsw_k<=r.fsw_max;
+
+  /* Feedback (Eq 3) */
+  r.RLS_calc=10.2e3;
+  r.RLS_ov=(ov.RLS_ohm!=null); r.RLS=r.RLS_ov?ov.RLS_ohm:r.RLS_calc;
+  r.RHS_calc=r.RLS*(vout/VREF-1); r.RHS_std=nearE24(r.RHS_calc);
+
+  /* Inductor (Eq 28) — use vin_max (worst case for min inductance) */
+  r.L_min=(vin_max-vout)*vout/(kind*iout*vin_max*fsw)*1e6;
+  r.L_auto=nearL(r.L_min);
+  r.L_ov=(ov.L_uH!=null); r.L=r.L_ov?ov.L_uH:r.L_auto;
+
+  /* Ripple currents (Eq 29,30,31) — use vin_max (worst case ripple) */
+  r.I_rip=vout*(vin_max-vout)/(vin_max*r.L*1e-6*fsw);
+  r.I_peak=iout+r.I_rip/2;
+  r.I_rms=Math.sqrt(iout*iout+r.I_rip*r.I_rip/12);
+  r.P_L=r.I_rms*r.I_rms*Rdc;
+  r.P_D=Vd*iout*(1-r.D);
+
+  /* Output capacitor (Eq 32,34) */
+  r.dVout=(dvout_pct/100)*vout; r.dIout=(diout_pct/100)*iout;
+  r.C_tr=2*r.dIout/(fsw*r.dVout)*1e6;
+  r.V_rip_max=0.005*vout;
+  r.C_rip=r.I_rip/(8*fsw*r.V_rip_max)*1e6;
+  r.C_min=Math.max(r.C_tr,r.C_rip,10);
+  r.C_auto=nearCap(r.C_min);
+  r.C_ov=(ov.C_out_uF!=null); r.C_out=r.C_ov?ov.C_out_uF:r.C_auto;
+
+  /* Input capacitor (Eq 38) — uses vin_min per datasheet */
+  r.I_cin=iout*Math.sqrt(vout*(vin_min-vout)/(vin_min*vin_min));
+
+  /* Compensation (Eq 44-51) — all derived from C_out */
+  r.Ceff=r.C_out*1e-6;
+  r.fp=iout/(2*Math.PI*vout*r.Ceff);
+  r.fz=1/(2*Math.PI*Resr*r.Ceff);
+  r.fco_a=Math.sqrt(r.fp*r.fz)/1e3;
+  r.fco_b=Math.sqrt(r.fp*(fsw/2))/1e3;
+  r.fco=Math.min(r.fco_a,r.fco_b)*1e3;
+  r.fco_bind=r.fco_a<r.fco_b?'46':'47';
+
+  r.R4_calc=(2*Math.PI*r.fco*r.Ceff*(vout/VREF))/(gmPS*gmEA);
+  r.R4_auto=nearE24(r.R4_calc);
+  r.R4_ov=(ov.R4_ohm!=null); r.R4=r.R4_ov?ov.R4_ohm:r.R4_auto;
+
+  r.C5_calc=1/(2*Math.PI*r.R4*r.fp)*1e12;
+  r.C5_auto=nearPF(r.C5_calc);
+  r.C5_ov=(ov.C5_pF!=null); r.C5=r.C5_ov?ov.C5_pF:r.C5_auto;
+
+  r.C8a_calc=1/(Math.PI*r.R4*fsw)*1e12;
+  r.C8b_calc=r.Ceff*Resr/r.R4*1e12;
+  r.C8_calc=Math.max(r.C8a_calc,r.C8b_calc);
+  r.C8_auto=nearPF(r.C8_calc);
+  r.C8_ov=(ov.C8_pF!=null); r.C8=r.C8_ov?ov.C8_pF:r.C8_auto;
+
+  /* Power dissipation (Eq.52-56) — vin_min for conduction (worst-case duty), vin_max for switching */
+  r.trise=vin_max*0.16e-9+3e-9;
+  r.P_COND=iout*iout*Rds*(vout/vin_min);
+  r.P_SW=vin_max*fsw*iout*r.trise;
+  r.P_GD=vin_max*3e-9*fsw;
+  r.P_Q=vin_max*146e-6;
+  r.Ptot=r.P_COND+r.P_SW+r.P_GD+r.P_Q;
+  r.eff=Math.min(98,100*(1-r.Ptot/(vin_min*iout)));
+  return r;
+}
+
+/* ── Value row: main value + std on left, override field on right ──
+   calcVal: calculated value string (HTML)
+   stdVal:  standard value string (HTML), null if none
+   isOv:    whether currently overridden
+   ovVal:   current active value text for the field
+   id:      override key for resetOv                                  */
+function valRow(calcVal, stdLabel, stdVal, isOv, ovVal, id) {
+  var leftHtml = isOv
+    ? '<div class="cv struck">'+calcVal+'</div>'
+      +'<div class="cstd">'+stdLabel+': '+stdVal+'</div>'
+      +'<div class="ov-active">'+ovVal+'</div>'
+    : '<div class="cv">'+calcVal+'</div>'
+      +(stdVal ? '<div class="cstd hi">'+stdLabel+': '+stdVal+'</div>' : '');
+  return '<div class="val-row">'
+    +'<div class="val-left">'+leftHtml+'</div>'
+    +'<div class="ov-inline">'
+    +'<input class="ov-field" id="ov-'+id+'" type="text" value="'+ovVal+'" />'
+    +'<button class="ov-rst" onclick="window.resetOv(\''+id+'\')">&#x21BA;</button>'
+    +'</div>'
+    +'</div>';
+}
+
+/* ── Render full results ── */
+function render(r) {
+  var html='';
+
+  /* Operating point */
+  html+='<div class="gtitle">Operating point</div>';
+  html+='<div class="srow">'
+    +'<div class="stat card" data-card-id="op_D">'+'<div class="clbl">Duty cycle</div>'+'<div class="sv">'+(r.D*100).toFixed(1)+'%</div>'+fb('—','D = Vout / Vin(min)','Vout='+r.vout+'V / Vin(min)='+r.vin_min+'V',((r.vout/r.vin_min)*100).toFixed(1)+'%')+'</div>'
+    +'<div class="stat card" data-card-id="op_eff">'+'<div class="clbl">Est. efficiency</div>'+'<div class="sv">'+r.eff.toFixed(1)+'%</div>'+fb('—','&eta; = 1 &minus; P<sub>IC</sub> / (Vin(max) &middot; Iout)','1 &minus; '+(r.Ptot).toFixed(3)+'W / ('+r.vin_max+'V &middot; '+r.iout+'A)',r.eff.toFixed(1)+'%')+'</div>'
+    +'<div class="stat card" data-card-id="op_Ptot">'+'<div class="clbl">IC dissipation</div>'+'<div class="sv">'+(r.Ptot*1000).toFixed(0)+'mW</div>'+fb('52','P<sub>COND</sub> = I<sub>out</sub>² &middot; R<sub>DS(on)</sub> &middot; (Vout/Vin)',r.iout+'² &middot; '+(r.Rds*1000).toFixed(0)+'mΩ &middot; ('+r.vout+'V / '+r.vin_min+'V)',(r.P_COND*1000).toFixed(0)+'mW')+fb('53','P<sub>SW</sub> = Vin &middot; f<sub>SW</sub> &middot; I<sub>out</sub> &middot; t<sub>rise</sub>',r.vin_max+'V &middot; '+(r.fsw/1e3)+'kHz &middot; '+r.iout+'A &middot; '+(r.trise*1e9).toFixed(2)+'ns',(r.P_SW*1000).toFixed(0)+'mW')+fb('54','P<sub>GD</sub> = Vin &middot; Q<sub>G</sub> &middot; f<sub>SW</sub>',r.vin_max+'V &middot; 3nC &middot; '+(r.fsw/1e3)+'kHz',(r.P_GD*1000).toFixed(0)+'mW')+fb('55','P<sub>Q</sub> = Vin &middot; I<sub>Q</sub>',r.vin_max+'V &middot; 146μA',(r.P_Q*1000).toFixed(1)+'mW')+'</div>'
+    +'<div class="stat card" data-card-id="op_Pout">'+'<div class="clbl">Output power</div>'+'<div class="sv">'+(r.vout*r.iout).toFixed(2)+'W</div>'+fb('—','P<sub>out</sub> = Vout &middot; Iout',r.vout+'V &middot; '+r.iout+'A',(r.vout*r.iout).toFixed(2)+'W')+'</div>'
+    +'</div>';
+
+  /* Frequency */
+  html+='<div class="gtitle">Frequency &amp; timing</div><div class="g2">';
+  html+='<div class="card" data-card-id="RT">'
+    +'<div class="clbl">RT resistor <span class="cbadge ok-b">R3</span></div>'
+    +'<div class="cv">'+fRH(r.RT_calc*1e3)+'</div>'
+    +'<div class="cstd hi">Std: '+fRH(r.RT_std)+'</div>'
+    +fb('8','RT(k&Omega;) = 101756 / fSW(kHz)^1.008',
+      '101756 / '+r.fsw_k+'^1.008',fRH(r.RT_calc*1e3))
+    +'<div class="cnote">Sets switching frequency via RT/CLK pin</div></div>';
+
+  var bl=r.fsw_bind==='skip'?'<span class="binding skip">Eq.9 binding</span>':'<span class="binding shift">Eq.10 binding</span>';
+  html+='<div class="card" data-card-id="fSW_max">'
+    +'<div class="clbl">Max fSW '+bl+' <span class="cbadge '+(r.fsw_ok?'ok-b':'warn-b')+'">'+(r.fsw_ok?'OK':'EXCEEDS MAX')+'</span></div>'
+    +'<div class="cv">'+p3(r.fsw_max)+' kHz</div>'
+    +'<div class="cstd">skip='+p3(r.fsw_skip)+'kHz &middot; shift='+p3(r.fsw_shift)+'kHz</div>'
+    +'<div class="fblock"><div class="ftitle">Eq. 9 &mdash; fSW(max skip)</div>'
+    +'<div class="feq"><span class="s">fSW(skip) = (1/tON) &times; (IO&middot;Rdc + Vout + Vd) / (Vin(max) &minus; IO&middot;RDS(on) + Vd)</span></div>'
+    +'<div class="feq"><span class="o">= (1/135ns) &times; ('+p3(r.iout)+'&times;'+r.Rdc*1e3+'m + '+r.vout+' + '+r.Vd+') / ('+r.vin_max+' &minus; '+p3(r.iout)+'&times;0.092 + '+r.Vd+')</span></div>'
+    +'<div class="feq"><span class="v">'+p3(r.fsw_skip)+' kHz</span></div></div>'
+    +'<div class="fblock"><div class="ftitle">Eq. 10 &mdash; fSW(shift)</div>'
+    +'<div class="feq"><span class="s">fSW(shift) = (fDIV/tON) &times; (ICL&middot;Rdc + Vout(SC) + Vd) / (Vin(max) &minus; ICL&middot;RDS(on) + Vd)</span></div>'
+    +'<div class="feq"><span class="o">= ('+r.fDIV+'/135ns) &times; ('+r.ICL+'&times;'+r.Rdc*1e3+'m + '+r.Vsc+' + '+r.Vd+') / ('+r.vin_max+' &minus; '+r.ICL+'&times;0.092 + '+r.Vd+')</span></div>'
+    +'<div class="feq"><span class="v">'+p3(r.fsw_shift)+' kHz</span></div></div>'
+    +'<div class="cnote"><strong>fSW,max = min('+p3(r.fsw_skip)+', '+p3(r.fsw_shift)+') = '+p3(r.fsw_max)+' kHz</strong>'+(r.fsw_ok?' &mdash; OK':' &mdash; &#9888; exceeds limit')+'</div>'
+    +'</div>';
+  html+='</div>';
+
+  /* Feedback */
+  html+='<div class="gtitle">Feedback resistors</div><div class="g2">';
+  html+='<div class="card'+(r.RLS_ov?' overridden':'')+'" data-card-id="RLS">'
+    +'<div class="clbl">RLS lower <span class="cbadge ok-b">R6</span>'+(r.RLS_ov?' <span class="cbadge ov-b">overridden</span>':'')+'</div>'
+    +valRow(fRH(r.RLS_calc), 'Fixed', fRH(r.RLS_calc), r.RLS_ov, fRT(r.RLS), 'RLS')
+    +'<div class="fblock"><div class="ftitle">Design choice (Eq. 3)</div>'
+    +'<div class="feq"><span class="s">RLS = 10.2k&Omega;</span> (reference leg)</div>'
+    +'<div class="feq"><span class="o">Keep RLS &lt; 800k&Omega; for divider accuracy</span></div></div>'
+    +'<div class="cnote">Use 1% tolerance or better</div></div>';
+  html+='<div class="card" data-card-id="RHS">'
+    +'<div class="clbl">RHS upper <span class="cbadge ok-b">R5</span></div>'
+    +'<div class="cv">'+fRH(r.RHS_calc)+'</div><div class="cstd hi">Std: '+fRH(r.RHS_std)+'</div>'
+    +fb('3','RHS = RLS &times; (Vout/VREF &minus; 1)',
+      fRH(r.RLS)+'<span class="'+(r.RLS_ov?'w':'o')+'"> &times; ('+r.vout+'/'+r.VREF+' &minus; 1)</span>',fRH(r.RHS_calc))
+    +'<div class="cnote">VREF = 0.8V internal. Use 1% resistors.</div></div>';
+  html+='</div>';
+
+  /* ── Inductor ── */
+  html+='<div class="gtitle">Output inductor</div>';
+  html+='<div class="card full'+(r.L_ov?' overridden':'')+'" data-card-id="L">'
+    +'<div class="clbl">Inductor <span class="cbadge ok-b">L1</span>'+(r.L_ov?' <span class="cbadge ov-b">overridden</span>':'')+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px">'
+    /* col 1: min calculated */
+    +'<div><div class="cv">'+fLH(r.L_min)+'</div><div class="cnote">Calculated min (Eq. 28)</div></div>'
+    /* col 2: standard / override */
+    +'<div>'
+      +valRow(fLH(r.L_auto), 'Std', fLH(r.L_auto), r.L_ov, fLT(r.L), 'L')
+    +'</div>'
+    /* col 3: derived currents */
+    +'<div><div class="cnote">&Delta;I<sub>L</sub> = <strong>'+(r.I_rip*1000).toFixed(0)+'mA</strong></div>'
+    +'<div class="cnote">I<sub>peak</sub> = <strong>'+r.I_peak.toFixed(2)+'A</strong></div>'
+    +'<div class="cnote">I<sub>rms</sub> = <strong>'+r.I_rms.toFixed(2)+'A</strong></div>'+'</div>'
+    +'</div>'
+    +fb('28','Lmin = (Vin(max)&minus;Vout)&middot;Vout / (Kind&middot;Iout&middot;Vin(max)&middot;fSW)',
+      '('+r.vin_max+'&minus;'+r.vout+')&middot;'+r.vout+' / ('+r.kind+'&middot;'+r.iout+'&middot;'+r.vin_max+'&middot;'+p3(r.fsw/1e3)+'k)',fLH(r.L_min))
+    +fb('29','I<sub>RIPPLE</sub> = Vout&middot;(Vin(max)&minus;Vout) / (Vin(max)&middot;L&middot;fSW)',
+      r.vout+'&middot;('+r.vin_max+'&minus;'+r.vout+') / ('+r.vin_max+'&middot;<span class="'+(r.L_ov?'w':'o')+'">'+fLH(r.L)+'</span>&middot;'+p3(r.fsw/1e3)+'k)',
+      (r.I_rip*1000).toFixed(1)+'mA')
+    +fb('30','I<sub>L,rms</sub> = &radic;(Iout&sup2; + (1/12)&middot;I<sub>RIPPLE</sub>&sup2;)',
+      '&radic;('+r.iout+'&sup2; + (1/12)&middot;'+(r.I_rip*1000).toFixed(1)+'m&sup2;)',r.I_rms.toFixed(3)+'A')
+    +fb('31','I<sub>L,peak</sub> = Iout + I<sub>RIPPLE</sub>/2',
+      r.iout+'A + '+(r.I_rip*1000).toFixed(1)+'mA / 2',r.I_peak.toFixed(3)+'A')
+    +'<div class="cnote" style="margin-top:6px">Select inductor: I<sub>sat</sub> &ge; <strong>'+r.I_peak.toFixed(2)+'A</strong> &nbsp;&middot;&nbsp; I<sub>rms</sub> &ge; <strong>'+r.I_rms.toFixed(2)+'A</strong></div>'
+    +'<div class="cnote">P<sub>inductor</sub> = <strong>'+(r.P_L*1000).toFixed(0)+'mW</strong></div>'
+    +fb('—','P<sub>inductor</sub> = I<sub>rms</sub>² &middot; Rdc',r.I_rms.toFixed(3)+'² &middot; '+(r.Rdc*1000).toFixed(0)+'mΩ',(r.P_L*1000).toFixed(0)+'mW')
+    +'</div>';
+
+  /* ── Capacitors ── */
+  html+='<div class="gtitle">Capacitors</div><div class="g2">';
+
+  html+='<div class="card'+(r.C_ov?' overridden':'')+'" data-card-id="C_out">'
+    +'<div class="clbl">C<sub>OUT</sub> output <span class="cbadge ok-b">C6/C7</span>'+(r.C_ov?' <span class="cbadge ov-b">overridden</span>':'')+'</div>'
+    +valRow(fCH(r.C_min), 'Std', fCH(r.C_auto), r.C_ov, fCT(r.C_out), 'C_out')
+    +fb('32','Cout &ge; 2&middot;&Delta;Iout / (fSW&middot;&Delta;Vout)',
+      '2&middot;'+p3(r.dIout)+'A / ('+p3(r.fsw/1e3)+'k&middot;'+p3(r.dVout)+'V)'
+        +'<br><span class="o">&Delta;Iout = '+r.diout_pct+'% &times; '+r.iout+'A = '+p3(r.dIout)+'A</span>'
+        +'<br><span class="o">&Delta;Vout = '+r.dvout_pct+'% &times; '+r.vout+'V = '+p3(r.dVout)+'V</span>',
+      r.C_tr.toFixed(1)+'&micro;F (transient)')
+    +fb('34','Cout &ge; &Delta;IL / (8&middot;fSW&middot;&Delta;Vripple)',
+      p3(r.I_rip)+'A / (8&middot;'+p3(r.fsw/1e3)+'k&middot;'+p3(r.V_rip_max,2)+'V)',r.C_rip.toFixed(1)+'&micro;F (ripple)')
+    +'<div class="cnote">Use larger: <strong>'+r.C_min.toFixed(1)+'&micro;F</strong> &mdash; X7R, &ge;'+(r.vout*1.3).toFixed(0)+'V'+(r.C_ov?' &mdash; <span style="color:var(--warn)">using '+fCH(r.C_out)+' (overridden)</span>':'')+'</div>'
+    +'</div>';
+
+  html+='<div class="card"><div class="clbl">C<sub>IN</sub> input <span class="cbadge ok-b">C1/C2</span></div>'
+    +'<div class="cv">&ge; 4.4&micro;F</div><div class="cstd hi">Std: 2&times;2.2&micro;F 100V X7R</div>'
+    +fb('38','ICIN,rms = Iout&middot;&radic;(Vout&middot;(Vin(min)&minus;Vout)/Vin(min)&sup2;)',
+      p3(r.iout)+'&middot;&radic;('+r.vout+'&middot;('+r.vin_min+'&minus;'+r.vout+')/'+r.vin_min+'&sup2;)',
+      (r.I_cin*1000).toFixed(0)+'mA rms ripple')
+    +'<div class="cnote">Min 3&micro;F &mdash; X7R, &ge;'+(r.vin_max*1.1).toFixed(0)+'V rated &mdash; place near VIN</div></div>';
+
+  html+='<div class="card"><div class="clbl">C<sub>BOOT</sub> bootstrap <span class="cbadge ok-b">C4</span></div>'
+    +'<div class="cv">100nF</div><div class="cstd hi">Fixed per datasheet</div>'
+    +'<div class="fblock"><div class="ftitle">Datasheet spec &middot; &sect;7.3.4</div>'
+    +'<div class="feq"><span class="s">Cboot = 0.1&micro;F</span> (fixed)</div>'
+    +'<div class="feq"><span class="o">X5R or X7R, &ge; 10V, BOOT&rarr;SW pins</span></div></div></div>';
+
+  html+='<div class="card" data-card-id="diode"><div class="clbl">Catch diode</div>'
+    +'<div class="cv">Schottky</div><div class="cstd hi">e.g. B560C-13-F</div>'
+    +'<div class="fblock"><div class="ftitle">Selection criteria</div>'
+    +'<div class="feq"><span class="s">VR</span> <span class="o">&ge; Vin,max = </span><span class="v">'+p3(r.vin_max)+'V</span></div>'
+    +'<div class="feq"><span class="s">IF</span> <span class="o">&ge; Ipeak = </span><span class="v">'+r.I_peak.toFixed(2)+'A</span></div></div>'
+    +'<div class="cnote">Low VF Schottky improves efficiency</div>'
+    +'<div class="cnote">P<sub>diode</sub> = <strong>'+(r.P_D*1000).toFixed(0)+'mW</strong></div>'
+    +fb('—','P<sub>diode</sub> = Vd &middot; Iout &middot; (1 &minus; D)',r.Vd+'V &middot; '+r.iout+'A &middot; (1 &minus; '+r.D.toFixed(4)+')',(r.P_D*1000).toFixed(0)+'mW')
+    +'</div>';
+  html+='</div>';
+
+  /* ── Compensation ── */
+  html+='<div class="gtitle">Type 2A compensation</div><div class="g3">';
+
+  var coutCls=r.C_ov?'w':'o';
+  var deratWarn='<div class="fblock" style="border-color:rgba(186,117,23,.4)">'
+    +'<div class="ftitle" style="color:var(--warn)">&#9888; Derating note</div>'
+    +'<div class="feq"><span class="o">The datasheet recommends using a derated value of Cout</span></div>'
+    +'<div class="feq"><span class="o">to account for capacitance loss due to DC bias and temperature.</span></div>'
+    +'<div class="feq"><span class="o">Typical derating for X7R ceramics: 10&ndash;20%. Verify against</span></div>'
+    +'<div class="feq"><span class="o">your specific capacitor&rsquo;s DC bias curve before finalising.</span></div>'
+    +'</div>';
+
+  html+='<div class="card" data-card-id="fp"><div class="clbl">f<sub>p(mod)</sub> modulator pole</div>'
+    +'<div class="cv">'+(r.fp/1e3).toFixed(2)+' kHz</div>'
+    +fb('44','fp = Iout / (2&pi;&middot;Vout&middot;Cout)',
+      p3(r.iout)+'A / (2&pi;&middot;'+r.vout+'V&middot;<span class="'+coutCls+'">'+p3(r.C_out)+'&micro;F</span>)',
+      (r.fp/1e3).toFixed(2)+' kHz')
+    +deratWarn
+    +'<div class="cnote">Dominant pole of the power stage. Cout = <span style="color:var(--'+(r.C_ov?'warn':'acc')+')">'+fCH(r.C_out)+'</span>'+(r.C_ov?' (overridden)':' (from capacitor section)')+'</div></div>';
+
+  html+='<div class="card" data-card-id="fz"><div class="clbl">f<sub>z(ESR)</sub> output cap zero</div>'
+    +'<div class="cv">'+(r.fz/1e3).toFixed(1)+' kHz</div>'
+    +fb('45','fz = 1 / (2&pi;&middot;Resr&middot;Cout)',
+      '1 / (2&pi;&middot;'+(r.Resr*1000)+'m&Omega;&middot;<span class="'+coutCls+'">'+p3(r.C_out)+'&micro;F</span>)',
+      (r.fz/1e3).toFixed(1)+' kHz')
+    +'<div class="cnote">Zero from output cap ESR &mdash; same Cout as Eq. 44</div></div>';
+
+  html+='<div class="card" data-card-id="fco"><div class="clbl">f<sub>co</sub> target crossover</div>'
+    +'<div class="cv">'+(r.fco/1e3).toFixed(2)+' kHz</div>'
+    +fb('46','fco(a) = &radic;(fp &middot; fz)',
+      '&radic;('+(r.fp/1e3).toFixed(2)+'k &middot; '+(r.fz/1e3).toFixed(1)+'k)',
+      r.fco_a.toFixed(2)+' kHz')
+    +fb('47','fco(b) = &radic;(fp &middot; fSW/2)',
+      '&radic;('+(r.fp/1e3).toFixed(2)+'k &middot; '+p3(r.fsw/2/1e3)+'k)',
+      r.fco_b.toFixed(2)+' kHz')
+    +'<div class="fblock"><div class="ftitle">Result &mdash; choose lower</div>'
+    +'<div class="feq"><span class="o">fco = min('+r.fco_a.toFixed(2)+'k, '+r.fco_b.toFixed(2)+'k) = </span>'
+    +'<span class="v">'+(r.fco/1e3).toFixed(2)+' kHz</span> <span class="o">(Eq. '+r.fco_bind+' binding)</span></div></div>'
+    +'<div class="cnote">Use lower of Eq. 46 and Eq. 47</div></div>';
+
+  html+='</div><div class="g3">';
+
+  html+='<div class="card'+(r.R4_ov?' overridden':'')+'" data-card-id="R4">'
+    +'<div class="clbl">R4 comp resistor <span class="cbadge ok-b">R4</span>'+(r.R4_ov?' <span class="cbadge ov-b">overridden</span>':'')+'</div>'
+    +valRow(fRH(r.R4_calc), 'Std', fRH(r.R4_auto), r.R4_ov, fRT(r.R4), 'R4')
+    +fb('48','R4 = 2&pi;&middot;fco&middot;Cout&middot;(Vout/VREF) / (gmPS&middot;gmEA)',
+      '2&pi;&middot;'+(r.fco/1e3).toFixed(2)+'k&middot;<span class="'+coutCls+'">'+p3(r.C_out)+'&micro;F</span>&middot;('+r.vout+'V/'+r.VREF+'V) / ('+r.gmPS+'&middot;'+r.gmEA*1e6+'&micro;)',
+      fRH(r.R4_calc))
+    +'</div>';
+
+  html+='<div class="card'+(r.C5_ov?' overridden':'')+'" data-card-id="C5">'
+    +'<div class="clbl">C5 zero cap <span class="cbadge ok-b">C5</span>'+(r.C5_ov?' <span class="cbadge ov-b">overridden</span>':'')+'</div>'
+    +valRow(fPH(r.C5_calc), 'Std', fPH(r.C5_auto), r.C5_ov, fPT(r.C5), 'C5')
+    +fb('49','C5 = 1 / (2&pi;&middot;R4&middot;fp)',
+      '1 / (2&pi;&middot;<span class="'+(r.R4_ov?'w':'o')+'">'+fRH(r.R4)+'</span>&middot;'+(r.fp/1e3).toFixed(2)+'kHz)',
+      fPH(r.C5_calc))
+    +'<div class="cnote">Places comp zero at f<sub>p(mod)</sub></div></div>';
+
+  html+='<div class="card'+(r.C8_ov?' overridden':'')+'" data-card-id="C8">'
+    +'<div class="clbl">C8 pole cap <span class="cbadge ok-b">C8</span>'+(r.C8_ov?' <span class="cbadge ov-b">overridden</span>':'')+'</div>'
+    +valRow(fPH(r.C8_calc), 'Std', fPH(r.C8_auto), r.C8_ov, fPT(r.C8), 'C8')
+    +fb('50','C8(a) = 1 / (&pi;&middot;R4&middot;fSW)',
+      '1 / (&pi;&middot;<span class="'+(r.R4_ov?'w':'o')+'">'+fRH(r.R4)+'</span>&middot;'+p3(r.fsw/1e3)+'kHz)',fPH(r.C8a_calc))
+    +fb('51','C8(b) = Cout&middot;Resr / R4',
+      '<span class="'+coutCls+'">'+p3(r.C_out)+'&micro;F</span>&middot;'+(r.Resr*1000)+'m&Omega; / <span class="'+(r.R4_ov?'w':'o')+'">'+fRH(r.R4)+'</span>',
+      fPH(r.C8b_calc))
+    +'<div class="fblock"><div class="ftitle">Result &mdash; use larger value</div>'
+    +'<div class="feq"><span class="o">C8 = max('+fPH(r.C8a_calc)+', '+fPH(r.C8b_calc)+') = </span><span class="v">'+fPH(r.C8_calc)+'</span></div></div>'
+    +'<div class="cnote">Places comp pole at f<sub>SW</sub> or ESR zero</div></div>';
+
+  html+='</div>';
+  var emptyEl=document.getElementById('empty');
+  var mainEl=document.getElementById('main');
+  if(emptyEl) emptyEl.style.display='none';
+  mainEl.style.display='flex';
+  mainEl.innerHTML=html;
+
+  /* re-attach live change listeners to override fields */
+  attachOvListeners();
+  /* inject formula toggle buttons and hide all fblocks */
+  initFormulaToggles();
+  /* highlight cards that changed since last calculation */
+  diffAndHighlight(r);
+}
+
+function getInputs(){
+  return{
+    vin_max: parseFloat(document.getElementById('vin_max').value),
+    vin_min: parseFloat(document.getElementById('vin_min').value),
+    vout:  parseFloat(document.getElementById('vout').value),
+    iout:  parseFloat(document.getElementById('iout').value),
+    fsw_k: parseFloat(document.getElementById('fsw').value),
+    kind:  parseFloat(document.getElementById('kind').value),
+    Rdc:   parseFloat(document.getElementById('rdc').value)*1e-3,
+    Vd:    parseFloat(document.getElementById('vd').value),
+    Resr:  parseFloat(document.getElementById('resr').value)*1e-3,
+    ICL:       parseFloat(document.getElementById('icl').value),
+    Vsc:       parseFloat(document.getElementById('vsc').value),
+    dvout_pct: parseFloat(document.getElementById('dvout_pct').value),
+    diout_pct: parseFloat(document.getElementById('diout_pct').value),
+  };
+}
+
+function recalc(){
+  if(!validate()) return;
+  var r=calc(getInputs(), OV);
+  window._r=r;
+  render(r);
+  saveState();
+}
+
+/* ── Change highlighting ── */
+var prevSnapshot = null;
+
+/* Map card-id → result key(s) to track. If any key changes, card is highlighted. */
+var CARD_KEYS = {
+  'RT':      ['RT_calc'],
+  'fSW_max': ['fsw_max', 'fsw_skip', 'fsw_shift'],
+  'RHS':     ['RHS_calc'],
+  'RLS':     ['RLS'],
+  'L':       ['L', 'I_rip', 'I_peak', 'I_rms', 'P_L'],
+  'diode':   ['P_D'],
+  'C_out':   ['C_out', 'C_min'],
+  'fp':      ['fp'],
+  'fz':      ['fz'],
+  'fco':     ['fco'],
+  'R4':      ['R4_calc', 'R4'],
+  'C5':      ['C5_calc', 'C5'],
+  'C8':      ['C8_calc', 'C8'],
+};
+
+function takeSnapshot(r) {
+  var snap = {};
+  Object.keys(CARD_KEYS).forEach(function(cid) {
+    snap[cid] = CARD_KEYS[cid].map(function(k){ return r[k]; });
+  });
+  return snap;
+}
+
+function diffAndHighlight(r) {
+  var newSnap = takeSnapshot(r);
+  /* always clear .updated from all cards first */
+  document.querySelectorAll('#main .card.updated').forEach(function(el){
+    el.classList.remove('updated');
+  });
+  if(prevSnapshot !== null) {
+    Object.keys(CARD_KEYS).forEach(function(cid) {
+      var prev = prevSnapshot[cid];
+      var next = newSnap[cid];
+      var changed = prev.some(function(v,i){
+        if(v == null || next[i] == null) return false;
+        /* use a small relative tolerance to avoid floating-point noise */
+        return Math.abs(v - next[i]) > Math.abs(v) * 1e-6 + 1e-12;
+      });
+      if(changed) {
+        var el = document.querySelector('#main [data-card-id="'+cid+'"]');
+        if(el) {
+          /* remove and re-add .changed to restart the animation */
+          el.classList.remove('changed');
+          void el.offsetWidth; /* force reflow */
+          el.classList.add('changed');
+          /* add permanent indicator */
+          el.classList.add('updated');
+        }
+      }
+    });
+  }
+  prevSnapshot = newSnap;
+}
+
+/* ── Attach change/blur listeners to override fields after render ── */
+function attachOvListeners(){
+  var map={
+    'L':   {key:'L_uH',  unit:'uH'},
+    'C_out':{key:'C_out_uF',unit:'uF'},
+    'RLS': {key:'RLS_ohm',unit:'Ohm'},
+    'R4':  {key:'R4_ohm',unit:'Ohm'},
+    'C5':  {key:'C5_pF', unit:'pF'},
+    'C8':  {key:'C8_pF', unit:'pF'},
+  };
+  Object.keys(map).forEach(function(id){
+    var el=document.getElementById('ov-'+id);
+    if(!el) return;
+    el.addEventListener('change', function(){
+      var v=parseVal(el.value, map[id].unit);
+      if(!isNaN(v)&&v>0){ OV[map[id].key]=v; recalc(); }
+    });
+    el.addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ el.blur(); }
+    });
+  });
+}
+
+window.resetOv=function(id){
+  var map={L:'L_uH',C_out:'C_out_uF',RLS:'RLS_ohm',R4:'R4_ohm',C5:'C5_pF',C8:'C8_pF'};
+  delete OV[map[id]];
+  recalc();
+};
+
+/* ── Formula show/hide ── */
+var allFormulasShown = false;
+
+/* ── Formula visibility state — persists across recalcs ── */
+var visibleFormulas = new Set(); /* stores data-card-id of cards with formulas shown */
+
+function initFormulaToggles(){
+  var cards = document.querySelectorAll('#main .card');
+  cards.forEach(function(card){
+    var fblocks = card.querySelectorAll('.fblock');
+    if(!fblocks.length) return;
+    var cid = card.getAttribute('data-card-id') || '';
+    /* restore visibility: show if was previously shown, hide otherwise */
+    var show = visibleFormulas.has(cid);
+    fblocks.forEach(function(fb){ fb.classList.toggle('hidden', !show); });
+    /* inject toggle button into .clbl */
+    var clbl = card.querySelector('.clbl');
+    if(!clbl) return;
+    var btn = document.createElement('button');
+    btn.className = 'ftog' + (show ? ' active' : '');
+    btn.innerHTML = '&#x2211;';
+    btn.title = show ? 'Hide formulas' : 'Show formulas';
+    btn.addEventListener('click', function(){
+      var showing = btn.classList.contains('active');
+      fblocks.forEach(function(fb){ fb.classList.toggle('hidden', showing); });
+      btn.classList.toggle('active', !showing);
+      btn.title = showing ? 'Show formulas' : 'Hide formulas';
+      /* update persistent state */
+      if(showing) visibleFormulas.delete(cid);
+      else visibleFormulas.add(cid);
+      updateGlobLabel();
+    });
+    clbl.appendChild(btn);
+  });
+  updateGlobLabel();
+}
+
+function updateGlobLabel(){
+  var btns = document.querySelectorAll('#main .ftog');
+  var allShown = btns.length > 0 && Array.prototype.every.call(btns, function(b){ return b.classList.contains('active'); });
+  var gt = document.getElementById('glob-tog');
+  if(gt) gt.classList.toggle('active', allShown);
+  allFormulasShown = allShown;
+}
+
+window.toggleAllFormulas = function(){
+  var btns = document.querySelectorAll('#main .ftog');
+  if(!btns.length) return;
+  var allShown = Array.prototype.every.call(btns, function(b){ return b.classList.contains('active'); });
+  var show = !allShown;
+  btns.forEach(function(btn){
+    var card = btn.closest('.card');
+    var fblocks = card ? card.querySelectorAll('.fblock') : [];
+    var cid = card ? card.getAttribute('data-card-id') || '' : '';
+    fblocks.forEach(function(fb){ fb.classList.toggle('hidden', !show); });
+    btn.classList.toggle('active', show);
+    btn.title = show ? 'Hide formulas' : 'Show formulas';
+    if(show) visibleFormulas.add(cid);
+    else visibleFormulas.delete(cid);
+  });
+  updateGlobLabel();
+};
+
+/* ── Reset all inputs to defaults and clear overrides ── */
+var DEFAULTS = {
+  vin_max:'60', vin_min:'12', vout:'5', iout:'3.5', fsw:'600',
+  rdc:'25', vd:'0.7', resr:'2.5', icl:'4.7', vsc:'0.1',
+  dvout_pct:'4', diout_pct:'75', kind:'0.3'
+};
+window.resetAll = function(){
+  Object.keys(DEFAULTS).forEach(function(id){
+    var n=document.getElementById(id);
+    var r=document.getElementById(id+'-r');
+    if(n) n.value=DEFAULTS[id];
+    if(r) r.value=DEFAULTS[id];
+  });
+  OV={};
+  prevSnapshot=null;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  recalc();
+};
+
+/* ── Auto-recalc: sliders fire on input with 50ms debounce,
+      number inputs fire on Enter key or blur ── */
+var sliderTimer = null;
+function sliderRecalc(){
+  clearTimeout(sliderTimer);
+  sliderTimer = setTimeout(function(){ recalc(); }, 50);
+}
+function inputRecalc(){
+  recalc();
+}
+
+var INPUT_IDS = ['vin_max','vin_min','vout','iout','fsw','rdc','vd','resr','icl','vsc','dvout_pct','diout_pct','kind'];
+INPUT_IDS.forEach(function(id){
+  var num = document.getElementById(id);
+  var rng = document.getElementById(id+'-r');
+  if(num){
+    num.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); num.blur(); inputRecalc(); }
+    });
+    num.addEventListener('blur', inputRecalc);
+  }
+  if(rng){
+    rng.addEventListener('input', sliderRecalc);
+  }
+});
+
+/* ── Save / Load configuration to/from JSON file ── */
+window.saveToFile = function(){
+  var inputs={};
+  Object.keys(DEFAULTS).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) inputs[id]=el.value;
+  });
+  var data=JSON.stringify({inputs:inputs, overrides:OV}, null, 2);
+  var blob=new Blob([data], {type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='tps54360b_config.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+window.loadFromFile = function(){
+  var input=document.getElementById('load-file-input');
+  input.onchange=function(){
+    var file=input.files[0];
+    if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try {
+        var state=JSON.parse(e.target.result);
+        if(state.inputs){
+          Object.keys(state.inputs).forEach(function(id){
+            var n=document.getElementById(id);
+            var r=document.getElementById(id+'-r');
+            if(n) n.value=state.inputs[id];
+            if(r) r.value=state.inputs[id];
+          });
+        }
+        if(state.overrides) OV=state.overrides;
+        else OV={};
+        prevSnapshot=null;
+        recalc();
+      } catch(ex) { alert('Invalid configuration file.'); }
+      input.value='';
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+};
+
+/* ── localStorage persistence ── */
+var STORAGE_KEY = 'tps54360b_state';
+
+function saveState(){
+  var inputs={};
+  Object.keys(DEFAULTS).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) inputs[id]=el.value;
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({inputs:inputs, overrides:OV}));
+  } catch(e) {}
+}
+
+function loadState(){
+  try {
+    var raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    var state=JSON.parse(raw);
+    /* restore inputs */
+    if(state.inputs){
+      Object.keys(state.inputs).forEach(function(id){
+        var n=document.getElementById(id);
+        var r=document.getElementById(id+'-r');
+        if(n) n.value=state.inputs[id];
+        if(r) r.value=state.inputs[id];
+      });
+    }
+    /* restore overrides */
+    if(state.overrides) OV=state.overrides;
+    return true;
+  } catch(e) { return false; }
+}
+
+/* hook saves into override apply/reset so they persist too */
+var _origApply = window.applyOverride;
+window.applyOverride = function(id, raw){
+  _origApply(id, raw);
+  saveState();
+};
+var _origReset = window.resetOv;
+window.resetOv = function(id){
+  _origReset(id);
+  saveState();
+};
+
+/* ── Init: load saved state (or defaults), then calculate immediately ── */
+loadState();
+validate();
+recalc();
+
+})();
+
+
+/* ── Schematic overlay ──────────────────────────────── */
+(function(){
+  'use strict';
+  var mu='μ', ohm='Ω', ge='≥';
+
+  function fR(v){
+    if(v==null||isNaN(v)) return '--';
+    if(v>=1e6) return +(v/1e6).toPrecision(3)+' M'+ohm;
+    if(v>=1e3) return +(v/1e3).toPrecision(3)+' k'+ohm;
+    return +v.toPrecision(3)+' '+ohm;
+  }
+  function fL(v){
+    if(v==null||isNaN(v)) return '--';
+    if(v>=1) return +(v).toPrecision(3)+' '+mu+'H';
+    return +(v*1000).toPrecision(3)+' nH';
+  }
+  function fC(v){
+    if(v==null||isNaN(v)) return '--';
+    if(v>=1)     return +(v).toPrecision(3)+' '+mu+'F';
+    if(v>=0.001) return +(v*1000).toPrecision(3)+' nF';
+    return +(v*1e6).toPrecision(3)+' pF';
+  }
+  function fPF(v){
+    if(v==null||isNaN(v)) return '--';
+    if(v>=1e6)  return +(v/1e6).toPrecision(3)+' '+mu+'F';
+    if(v>=1000) return +(v/1000).toPrecision(3)+' nF';
+    return +v.toPrecision(3)+' pF';
+  }
+
+  // Positions as % of SVG viewBox 297x210
+  var OVL = [
+    {id:'C1_C2', ref:'C1/C2', x:11, y:27,
+      fmt:function(r){ return ge+'4.4 '+mu+'F'; },
+      sub:function(r){ return 'Min 3'+mu+'F X7R'; },
+      ov:function(r){ return false; }},
+    {id:'C4', ref:'C4', x:57, y:20,
+      fmt:function(r){ return '100 nF'; },
+      sub:function(r){ return 'Boot cap'; },
+      ov:function(r){ return false; }},
+    {id:'L1', ref:'L1', x:74, y:24,
+      fmt:function(r){ return fL(r.L); },
+      sub:function(r){ return r.L_ov ? 'Override' : 'Std: '+fL(r.L_auto); },
+      ov:function(r){ return !!r.L_ov; }},
+    {id:'C6_C7', ref:'C6/C7', x:87, y:54,
+      fmt:function(r){ return fC(r.C_out); },
+      sub:function(r){ return r.C_ov ? 'Override' : 'Std: '+fC(r.C_auto); },
+      ov:function(r){ return !!r.C_ov; }},
+    {id:'D1', ref:'D1', x:61, y:57,
+      fmt:function(r){ return r.Vd.toFixed(2)+' V fwd'; },
+      sub:function(r){ return 'P='+(r.P_D*1000).toFixed(0)+' mW'; },
+      ov:function(r){ return false; }},
+    {id:'R3', ref:'R3', x:24, y:43,
+      fmt:function(r){ return fR(r.RT_std); },
+      sub:function(r){ return 'f='+r.fsw_k+' kHz'; },
+      ov:function(r){ return false; }},
+    {id:'R4', ref:'R4', x:31, y:57,
+      fmt:function(r){ return fR(r.R4); },
+      sub:function(r){ return r.R4_ov ? 'Override' : 'Std: '+fR(r.R4_auto); },
+      ov:function(r){ return !!r.R4_ov; }},
+    {id:'C5', ref:'C5', x:30, y:72,
+      fmt:function(r){ return fPF(r.C5); },
+      sub:function(r){ return r.C5_ov ? 'Override' : 'Std: '+fPF(r.C5_auto); },
+      ov:function(r){ return !!r.C5_ov; }},
+    {id:'C8', ref:'C8', x:15, y:62,
+      fmt:function(r){ return fPF(r.C8); },
+      sub:function(r){ return r.C8_ov ? 'Override' : 'Std: '+fPF(r.C8_auto); },
+      ov:function(r){ return !!r.C8_ov; }},
+    {id:'R5', ref:'R5', x:82, y:43,
+      fmt:function(r){ return fR(r.RHS_std); },
+      sub:function(r){ return 'Std: '+fR(r.RHS_std); },
+      ov:function(r){ return false; }},
+    {id:'R6', ref:'R6', x:82, y:67,
+      fmt:function(r){ return fR(r.RLS); },
+      sub:function(r){ return r.RLS_ov ? 'Override' : 'Std: '+fR(r.RLS_calc); },
+      ov:function(r){ return !!r.RLS_ov; }},
+  ];
+
+  var _open=false, _built=false;
+
+  window.toggleSchematic = function(){
+    _open = !_open;
+    var main  = document.getElementById('main');
+    var panel = document.getElementById('schem-panel');
+    var tog   = document.getElementById('schem-tog');
+    if(!panel) return;
+    if(_open){
+      main.style.display  = 'none';
+      panel.classList.add('active');
+      tog.classList.add('son');
+      if(!_built){ _build(); _built=true; }
+      _update();
+    } else {
+      main.style.display  = '';
+      panel.classList.remove('active');
+      tog.classList.remove('son');
+    }
+  };
+
+  function _build(){
+    var wrap = document.getElementById('schem-wrap');
+    if(!wrap) return;
+    OVL.forEach(function(o){
+      var el = document.createElement('div');
+      el.className = 'svl';
+      el.id = 'svl-'+o.id;
+      el.style.left = o.x+'%';
+      el.style.top  = o.y+'%';
+      el.innerHTML =
+        '<span class="svl-ref">'+o.ref+'</span>'+
+        '<span class="svl-val">--</span>'+
+        '<span class="svl-sub">--</span>';
+      wrap.appendChild(el);
+    });
+  }
+
+  function _update(){
+    var r = window._r;
+    if(!r) return;
+    OVL.forEach(function(o){
+      var el = document.getElementById('svl-'+o.id);
+      if(!el) return;
+      try{ el.querySelector('.svl-val').textContent = o.fmt(r); }catch(e){}
+      try{ el.querySelector('.svl-sub').textContent = o.sub(r); }catch(e){}
+      try{ el.classList.toggle('ov', o.ov(r)); }catch(e){}
+    });
+  }
+
+  // Wrap render() so it can't override display:none when schematic is open
+  var _origRender = window.render;
+  window.render = function(r){
+    if(_origRender) _origRender.apply(this, arguments);
+    if(_open){
+      var main = document.getElementById('main');
+      if(main) main.style.display = 'none';
+      _update();
+    }
+  };
+
+  var _origRecalc = window.recalc;
+  window.recalc = function(){
+    if(_origRecalc) _origRecalc.apply(this, arguments);
+    if(_open) _update();
+  };
+
+  window._schemUpdate = _update;
+})();
+
+</script>
+</body>
+</html>
