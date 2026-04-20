@@ -34,12 +34,12 @@ git clone https://github.com/nightswimmer/TPS54360B-Calculator.git
 cd TPS54360B-Calculator
 
 # Open directly
-start TPS54360B-Calculator.html    # Windows
-open  TPS54360B-Calculator.html    # macOS
-xdg-open TPS54360B-Calculator.html # Linux
+start index.html    # Windows
+open  index.html    # macOS
+xdg-open index.html # Linux
 ```
 
-Or just double-click the file. The only network fetch is the Google Fonts stylesheet (`JetBrains Mono`, `Syne`) — the app runs fine offline after the first load.
+Or just double-click `index.html`. Because the file is named `index.html`, enabling GitHub Pages on this repo serves the calculator directly at the root URL with no extra configuration. The only network fetch is the Google Fonts stylesheet (`JetBrains Mono`, `Syne`) — the app runs fine offline after the first load.
 
 ## Usage tips
 
@@ -54,7 +54,7 @@ Or just double-click the file. The only network fetch is the Google Fonts styles
 
 | File | Purpose |
 | --- | --- |
-| `TPS54360B-Calculator.html` | The full app — HTML + CSS + JS + inline SVG schematic. |
+| `index.html` | The full app — HTML + CSS + JS + inline SVG schematic. Named `index.html` so GitHub Pages / any static host serves it at the root URL. |
 | `PROJECT_INSTRUCTIONS.md` | Long-form internal project state for future development sessions. |
 | `CLAUDE.md` | Assistant instructions for working in this repo. |
 | `LICENSE` | MIT. |

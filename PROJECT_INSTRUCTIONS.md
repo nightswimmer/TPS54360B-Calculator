@@ -4,7 +4,7 @@
 A single-file self-contained HTML/JS web application that calculates all component values needed to design a power supply circuit using the TPS54360B (Texas Instruments, 60V 3.5A synchronous step-down DC/DC converter). The datasheet (SNVSB93) is the reference for all equation numbers used in the UI and this document.
 
 ## Repository layout
-- `TPS54360B-Calculator.html` — the full application (HTML + CSS + JS + embedded SVG schematic), all in one file. This is the only runtime artefact; open it directly in any modern browser.
+- `index.html` — the full application (HTML + CSS + JS + embedded SVG schematic), all in one file. Named `index.html` so GitHub Pages (and any plain static host) serves it automatically at the repo root.
 - `README.md` — GitHub landing page.
 - `LICENSE` — MIT.
 - `CLAUDE.md` — instructions for the Claude Code assistant when working in this repo.
@@ -13,7 +13,7 @@ A single-file self-contained HTML/JS web application that calculates all compone
 No build step, no server, no dependencies beyond the two Google Fonts (`JetBrains Mono`, `Syne`) pulled from `fonts.googleapis.com` at page load.
 
 ## Browser testing
-Just double-click the HTML file (or open it via `file://`). For older workflows where a local HTTP server was used, the helper `serve_calculator.py` has been retired — the app has no features that require HTTP.
+Just double-click `index.html` (or open it via `file://`). Because the file is called `index.html`, hosting the repo on GitHub Pages or any static file server automatically serves the calculator at the root URL with no extra config. The old numbered-filename / `serve_calculator.py` workflow has been retired — the app has no features that require HTTP.
 
 Useful globals for debugging in the console:
 - `window._r` — the full result object from the last `calc()` call.
