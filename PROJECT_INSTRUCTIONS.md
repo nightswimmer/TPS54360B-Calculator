@@ -57,9 +57,10 @@ Note: the HTML `value="..."` attribute on the `#resr` input is `0.25`, while `DE
 
 ### Standard value lookup tables
 - Resistors: E24+E96 combined superset — 114 values, `var E96=[...]`, used by `nearE24()` which iterates over `E96` across decades.
-- Capacitors µF: E24 — 137 values, `var CAP_UF=[...]`, used by `nearCap()`.
-- Capacitors pF: E24 — 89 values, `var CAP_PF=[...]`, used by `nearPF()`.
+- Capacitors µF: E24 — 137 values, `var CAP_UF=[...]`, range 1 nF → 470 µF, used by `nearCap()`.
+- Capacitors pF: E24 — 121 values, `var CAP_PF=[...]`, range 10 pF → 1 µF, used by `nearPF()`. Extended past 47 nF so compensation caps (C5/C8) that land in the hundreds-of-nF range get a real standard-value match instead of being clamped to the table's max.
 - Inductors µH: E12 — 29 values, `var IND_UH=[...]`, used by `nearL()`.
+- `nearPF()` / `nearCap()` are ceiling lookups (return the first table entry ≥ target). If the target exceeds the table's maximum they fall through to the last element — so the tables must cover the full range the calculator can produce.
 
 `parseVal(raw, defaultUnit)` handles µH/uH/mH, µF/uF/nF/pF, kΩ/Ω/mΩ suffixes on override fields.
 
